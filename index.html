@@ -303,7 +303,7 @@ function buildApp(){
   if(mode==='client'&&!clientName){
     h+='<div style="background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.2)">';
     h+='<p style="color:#fff;font-weight:600;margin-bottom:14px;font-family:\'DM Serif Display\',serif;font-size:18px">Welcome! Let\'s get started.</p>';
-    h+='<div style="display:flex;flex-direction:column;gap:10px"><input id="reg-name" value="'+esc(S.tmpName)+'" oninput="S.tmpName=this.value" placeholder="Your Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/><input id="reg-pw" value="'+esc(S.tmpPw)+'" oninput="S.tmpPw=this.value" type="password" placeholder="Set a Password" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/><button onclick="signup()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Start My Journey</button></div></div>';
+    h+='<div style="display:flex;flex-direction:column;gap:10px"><input id="reg-name" placeholder="Your Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/><input id="reg-pw" type="password" placeholder="Set a Password" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/><button onclick="signup()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Start My Journey</button></div></div>';
   }
   if(mode==='client'&&clientName){
     h+='<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:16px">';
@@ -511,6 +511,24 @@ function attachEvents(){
   if(cpw2){cpw2.focus();cpw2.onkeydown=function(e){if(e.key==='Enter')verifyChange()};}
   var at=document.getElementById('ans-txt');
   if(at)at.oninput=function(e){S.ansText=e.target.value;};
+  // 회원가입 폼 - render 후 값 복원 + 커서 위치 유지
+  var rn=document.getElementById('reg-name');
+  if(rn){
+    rn.value=S.tmpName;
+    rn.oninput=function(e){S.tmpName=e.target.value;};
+    rn.onkeydown=function(e){if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();var pw=document.getElementById('reg-pw');if(pw)pw.focus();}};
+  }
+  var rp=document.getElementById('reg-pw');
+  if(rp){
+    rp.value=S.tmpPw;
+    rp.oninput=function(e){S.tmpPw=e.target.value;};
+    rp.onkeydown=function(e){if(e.key==='Enter')signup();};
+  }
+  // contract 폼 값 복원
+  var ctcn=document.getElementById('ct-cn');
+  if(ctcn){ctcn.value=S.formContract.cn;ctcn.oninput=function(e){S.formContract.cn=e.target.value;};}
+  var ctpl=document.getElementById('ct-plan');
+  if(ctpl){ctpl.value=S.formContract.plan;ctpl.oninput=function(e){S.formContract.plan=e.target.value;};}
   // PayPal
   if(S.tab==='payment'&&S.ppSel&&!S.ppPaid){
     var btn=document.getElementById('pp-container');
