@@ -112,6 +112,75 @@
       Users: ({size=20,color='currentColor'}) => <Icon d={["M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2","M23 21v-2a4 4 0 00-3-3.87","M16 3.13a4 4 0 010 7.75","M9 11a4 4 0 100-8 4 4 0 000 8z"]} size={size} color={color} />,
     };
 
+    const Modal = ({ onClose, title, children }) => (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+          <div className="modal-handle" />
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+            <h2 style={{fontFamily:'DM Serif Display,serif',fontSize:26,color:'#2D9078'}}>{title}</h2>
+            <button onClick={onClose} style={{color:'#52C9A8',padding:4}}><Icons.X size={22} /></button>
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+
+    const MealCard = ({ meal, mode, expandedMeals, toggleMeal, selectedMeal, setSelectedMeal, feedbackText, setFeedbackText, addFeedback, deleteMeal, saving }) => {
+      const isExpanded = expandedMeals[meal.id];
+      const feedbackList = meal.feedback || [];
+      return (
+        <div style={{background: meal.isEmergency ? '#E8F8F4' : '#fff', border: meal.isEmergency ? '1.5px solid #B8D4B9' : '1.5px solid #C8EDE6', borderRadius:18, overflow:'hidden', marginBottom:10}}>
+          <button style={{width:'100%',padding:'14px 18px',display:'flex',alignItems:'center',gap:12,textAlign:'left',background:'none',border:'none'}} onClick={() => toggleMeal(meal.id)}>
+            <div style={{flex:1,display:'flex',alignItems:'center',gap:10,minWidth:0}}>
+              {meal.isEmergency ? <span className="tag-sage">Special Note</span> : <span className="tag-dark">{meal.mealType}</span>}
+              <span style={{fontWeight:600,color:'#2D9078',fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{meal.clientName}</span>
+              <span style={{color:'#5A9A8E',fontSize:13,flexShrink:0}}>{meal.time}</span>
+              {feedbackList.length > 0 && <span style={{color:'#5A9A8E',fontSize:12,flexShrink:0}}>💬 {feedbackList.length}</span>}
+            </div>
+            {isExpanded ? <Icons.ChevronUp size={18} color="#52C9A8" /> : <Icons.ChevronDown size={18} color="#52C9A8" />}
+          </button>
+          {isExpanded && (
+            <div style={{padding:'0 18px 20px',borderTop:'1px solid #D4F2EB'}}>
+              {mode === 'coach' && <div style={{display:'flex',justifyContent:'flex-end',paddingTop:12,marginBottom:8}}><button onClick={() => deleteMeal(meal.id)} style={{color:'#52C9A8'}}><Icons.X size={18} /></button></div>}
+              <p style={{color:'#2D7060',lineHeight:1.6,marginTop: mode !== 'coach' ? 14 : 0,marginBottom:12}}>
+                {meal.isEmergency && meal.emergencyType && <span className="tag-warm" style={{marginRight:8,marginBottom:6,display:'inline-block'}}>{meal.emergencyType}</span>}
+                {meal.foods}
+              </p>
+              {(meal.fullness || meal.satietyHours) && (
+                <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
+                  {meal.fullness && <span style={{background:'#D4F2EB',color:'#2D9078',borderRadius:20,padding:'4px 12px',fontSize:12,fontWeight:600}}>🍽️ {fullnessLabels[meal.fullness] || meal.fullness}</span>}
+                  {meal.satietyHours && <span style={{background:'#D4F2EB',color:'#2D9078',borderRadius:20,padding:'4px 12px',fontSize:12,fontWeight:600}}>⏱️ {meal.satietyHours}</span>}
+                </div>
+              )}
+              {feedbackList.length > 0 && (
+                <div style={{marginBottom:12}}>
+                  {feedbackList.map((fb,i) => (
+                    <div key={i} className="feedback-bubble" style={{marginBottom:8}}>
+                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                        <span style={{fontSize:12,fontWeight:700,color:'#3BAA8C'}}>{fb.author}</span>
+                        <span style={{fontSize:11,color:'#5A9A8E'}}>{fb.timestamp}</span>
+                      </div>
+                      <p style={{color:'#2D7060',fontSize:14}}>{fb.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {mode === 'coach' && (selectedMeal == meal.id ? (
+                <div style={{display:'flex',gap:8,paddingTop:12,borderTop:'1px solid #D4F2EB'}}>
+                  <input value={feedbackText} onChange={e => setFeedbackText(e.target.value)} placeholder="Write feedback..." className="input-field" style={{flex:1}} />
+                  <button onClick={() => addFeedback(meal.id)} className="btn-sage" style={{padding:'10px 14px'}} disabled={saving}><Icons.Send size={16} /></button>
+                  <button onClick={() => setSelectedMeal(null)} style={{color:'#52C9A8',padding:'10px'}}><Icons.X size={16} /></button>
+                </div>
+              ) : (
+                <button onClick={() => setSelectedMeal(meal.id)} style={{color:'#3BAA8C',fontWeight:600,fontSize:14,paddingTop:12,borderTop:'1px solid #D4F2EB',width:'100%',textAlign:'left',background:'none',border:'none',borderTop:'1px solid #D4F2EB'}}>+ Add Feedback</button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+
     function App() {
       const [mode, setMode] = useState('client');
       const [coachPassword, setCoachPassword] = useState('');
@@ -314,75 +383,10 @@
       const deleteMeeting = async (id) => { try { await apiCall('meetings','delete',{id}); } catch(e) {} const u = meetings.filter(m => m.id != id); setMeetings(u); save('meetings', u); };
       const deleteInquiry = async (id) => { try { await apiCall('inquiries','delete',{id}); } catch(e) {} const u = inquiries.filter(i => i.id != id); setInquiries(u); save('inquiries', u); };
 
-      const Modal = ({ onClose, title, children }) => (
-        <div className="modal-overlay" onClick={onClose}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h2 style={{fontFamily:'DM Serif Display,serif',fontSize:26,color:'#2D9078'}}>{title}</h2>
-              <button onClick={onClose} style={{color:'#52C9A8',padding:4}}><Icons.X size={22} /></button>
-            </div>
-            {children}
-          </div>
-        </div>
-      );
+
 
       const fullnessLabels = ['','Still hungry','A little full','Just right','Pretty full','Very full'];
 
-      const MealCard = ({ meal }) => {
-        const isExpanded = expandedMeals[meal.id];
-        const feedbackList = meal.feedback || [];
-        return (
-          <div style={{background: meal.isEmergency ? '#E8F8F4' : '#fff', border: meal.isEmergency ? '1.5px solid #B8D4B9' : '1.5px solid #C8EDE6', borderRadius:18, overflow:'hidden', marginBottom:10}}>
-            <button style={{width:'100%',padding:'14px 18px',display:'flex',alignItems:'center',gap:12,textAlign:'left',background:'none',border:'none'}} onClick={() => toggleMeal(meal.id)}>
-              <div style={{flex:1,display:'flex',alignItems:'center',gap:10,minWidth:0}}>
-                {meal.isEmergency ? <span className="tag-sage">Special Note</span> : <span className="tag-dark">{meal.mealType}</span>}
-                <span style={{fontWeight:600,color:'#2D9078',fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{meal.clientName}</span>
-                <span style={{color:'#5A9A8E',fontSize:13,flexShrink:0}}>{meal.time}</span>
-                {feedbackList.length > 0 && <span style={{color:'#5A9A8E',fontSize:12,flexShrink:0}}>💬 {feedbackList.length}</span>}
-              </div>
-              {isExpanded ? <Icons.ChevronUp size={18} color="#52C9A8" /> : <Icons.ChevronDown size={18} color="#52C9A8" />}
-            </button>
-            {isExpanded && (
-              <div style={{padding:'0 18px 20px',borderTop:'1px solid #D4F2EB'}}>
-                {mode === 'coach' && <div style={{display:'flex',justifyContent:'flex-end',paddingTop:12,marginBottom:8}}><button onClick={() => deleteMeal(meal.id)} style={{color:'#52C9A8'}}><Icons.X size={18} /></button></div>}
-                <p style={{color:'#2D7060',lineHeight:1.6,marginTop: mode !== 'coach' ? 14 : 0,marginBottom:12}}>
-                  {meal.isEmergency && meal.emergencyType && <span className="tag-warm" style={{marginRight:8,marginBottom:6,display:'inline-block'}}>{meal.emergencyType}</span>}
-                  {meal.foods}
-                </p>
-                {(meal.fullness || meal.satietyHours) && (
-                  <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
-                    {meal.fullness && <span style={{background:'#D4F2EB',color:'#2D9078',borderRadius:20,padding:'4px 12px',fontSize:12,fontWeight:600}}>🍽️ {fullnessLabels[meal.fullness] || meal.fullness}</span>}
-                    {meal.satietyHours && <span style={{background:'#D4F2EB',color:'#2D9078',borderRadius:20,padding:'4px 12px',fontSize:12,fontWeight:600}}>⏱️ {meal.satietyHours}</span>}
-                  </div>
-                )}
-                {feedbackList.length > 0 && (
-                  <div style={{marginBottom:12}}>
-                    {feedbackList.map((fb,i) => (
-                      <div key={i} className="feedback-bubble" style={{marginBottom:8}}>
-                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                          <span style={{fontSize:12,fontWeight:700,color:'#3BAA8C'}}>{fb.author}</span>
-                          <span style={{fontSize:11,color:'#5A9A8E'}}>{fb.timestamp}</span>
-                        </div>
-                        <p style={{color:'#2D7060',fontSize:14}}>{fb.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {mode === 'coach' && (selectedMeal == meal.id ? (
-                  <div style={{display:'flex',gap:8,paddingTop:12,borderTop:'1px solid #D4F2EB'}}>
-                    <input value={feedbackText} onChange={e => setFeedbackText(e.target.value)} placeholder="Write feedback..." className="input-field" style={{flex:1}} />
-                    <button onClick={() => addFeedback(meal.id)} className="btn-sage" style={{padding:'10px 14px'}} disabled={saving}><Icons.Send size={16} /></button>
-                    <button onClick={() => setSelectedMeal(null)} style={{color:'#52C9A8',padding:'10px'}}><Icons.X size={16} /></button>
-                  </div>
-                ) : (
-                  <button onClick={() => setSelectedMeal(meal.id)} style={{color:'#3BAA8C',fontWeight:600,fontSize:14,paddingTop:12,borderTop:'1px solid #D4F2EB',width:'100%',textAlign:'left',background:'none',border:'none',borderTop:'1px solid #D4F2EB'}}>+ Add Feedback</button>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      };
 
       const tabs = [
         { id: 'meals', Icon: Icons.Utensils, label: 'Meals' },
@@ -792,7 +796,7 @@
                     {['Breakfast','Lunch','Dinner','Snack'].map(t => <button key={t} onClick={() => setMealForm({...mealForm,mealType:t})} className={mealForm.mealType===t?'meal-type-active':'meal-type'} style={{padding:'10px 4px',fontSize:13,fontWeight:600,border:'none',cursor:'pointer'}}>{t}</button>)}
                   </div>
                 </div>
-                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>What did you eat?</label><textarea value={mealForm.foods} onChange={e => setMealForm({...mealForm,foods:e.target.value})} placeholder="Describe your meal..." className="input-field" rows={3} style={{resize:'none'}} /></div>
+                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>What did you eat?</label><textarea defaultValue={mealForm.foods} onBlur={e => setMealForm(f=>({...f,foods:e.target.value}))} onChange={e => { mealForm.foods = e.target.value; }} placeholder="Describe your meal..." className="input-field" rows={3} style={{resize:'none'}} /></div>
                 <div>
                   <label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:8}}>How full did you feel after? 🍽️</label>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8}}>
@@ -835,8 +839,8 @@
                   </div>
                   <p style={{fontSize:12,color:'#5A9A8E',marginTop:6,textAlign:'center'}}>1 = Very Low · 5 = Very High</p>
                 </div>
-                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>How are you feeling?</label><textarea value={journalForm.feelings} onChange={e => setJournalForm({...journalForm,feelings:e.target.value})} placeholder="Share your thoughts, emotions..." className="input-field" rows={4} style={{resize:'none'}} /></div>
-                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>Additional Notes</label><textarea value={journalForm.notes} onChange={e => setJournalForm({...journalForm,notes:e.target.value})} placeholder="Anything else on your mind..." className="input-field" rows={3} style={{resize:'none'}} /></div>
+                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>How are you feeling?</label><textarea value={journalForm.feelings} onChange={e => setJournalForm({...journalForm,feelings:e.target.value})} defaultValue={journalForm.feelings} onBlur={e => setJournalForm(f=>({...f,feelings:e.target.value}))} onChange={e => { journalForm.feelings = e.target.value; }} placeholder="Share your thoughts, emotions..." className="input-field" rows={4} style={{resize:'none'}} /></div>
+                <div><label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:6}}>Additional Notes</label><textarea value={journalForm.notes} onChange={e => setJournalForm({...journalForm,notes:e.target.value})} defaultValue={journalForm.notes} onBlur={e => setJournalForm(f=>({...f,notes:e.target.value}))} onChange={e => { journalForm.notes = e.target.value; }} placeholder="Anything else on your mind..." className="input-field" rows={3} style={{resize:'none'}} /></div>
                 <button onClick={submitJournal} className="btn-sage" style={{width:'100%',padding:'15px',fontSize:16}} disabled={saving}>Save Journal</button>
               </div>
             </Modal>
