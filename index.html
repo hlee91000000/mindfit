@@ -9,11 +9,16 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <meta name="color-scheme" content="light only" />
+  <meta name="color-scheme" content="light" />
   <style>
-    :root { color-scheme: light only; }
+    :root { color-scheme: light; }
+    @media (prefers-color-scheme: dark) {
+      html { background: #F4FBFA !important; }
+      body { background: #F4FBFA !important; color: #2D7060 !important; }
+      input, textarea, select, button { background-color: initial !important; color: initial !important; }
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #F4FBFA; font-family: 'DM Sans', sans-serif; color: #2D7060; }
+    body { background: #F4FBFA !important; font-family: 'DM Sans', sans-serif; color: #2D7060; }
     button { cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; background: none; }
     input, textarea, select { font-family: 'DM Sans', sans-serif; }
     .card { background: #fff; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
