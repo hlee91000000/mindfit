@@ -13,9 +13,13 @@
   <style>
     :root { color-scheme: light; }
     @media (prefers-color-scheme: dark) {
-      html { background: #F4FBFA !important; }
-      body { background: #F4FBFA !important; color: #2D7060 !important; }
-      input, textarea, select, button { background-color: initial !important; color: initial !important; }
+      html, body { background: #F4FBFA !important; color: #2D7060 !important; }
+      .card, .card-warm, .stat-card, .modal-sheet { background: #fff !important; color: #2D7060 !important; }
+      .btn-primary { background: #3BAA8C !important; color: #fff !important; }
+      .btn-sage { background: #52C9A8 !important; color: #fff !important; }
+      .header-gradient { background: linear-gradient(135deg, #3BAA8C 0%, #52C9A8 100%) !important; }
+      .upcoming-meeting { background: linear-gradient(135deg, #3BAA8C, #52C9A8) !important; }
+      input, textarea, select { background: #FAFEFE !important; color: #2D7060 !important; border-color: #B8E8DF !important; }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #F4FBFA !important; font-family: 'DM Sans', sans-serif; color: #2D7060; }
