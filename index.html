@@ -9,7 +9,6 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=ARllutZeJShzQMPZMOwIX7vD8CRA4g-LBq9-DnTjHi5tn4H8qrfrgkT0LX_fcDnmiT3zktRdoNM6F-B1&currency=SGD&components=buttons"></script>
   <style>
     :root { color-scheme: light; }
     @media (prefers-color-scheme: dark) {
@@ -445,27 +444,45 @@ const PLANS = [
   { id: 'session', name: 'Single Session', price: '80.00', currency: 'SGD', desc: 'One-on-one coaching session', emoji: '💬' },
 ];
 
+const PAYPAL_CLIENT_ID = 'ARllutZeJShzQMPZMOwIX7vD8CRA4g-LBq9-DnTjHi5tn4H8qrfrgkT0LX_fcDnmiT3zktRdoNM6F-B1';
+
+const loadPayPalScript = () => new Promise((resolve, reject) => {
+  if (window.paypal) { resolve(); return; }
+  const script = document.createElement('script');
+  script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=SGD&components=buttons`;
+  script.onload = resolve;
+  script.onerror = reject;
+  document.body.appendChild(script);
+});
+
 const PayPalButton = ({ plan, onSuccess }) => {
   const containerRef = useRef(null);
   const rendered = useRef(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!containerRef.current || rendered.current) return;
-    if (!window.paypal) return;
+    if (rendered.current) return;
     rendered.current = true;
-    window.paypal.Buttons({
-      style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', height: 48 },
-      createOrder: (data, actions) => actions.order.create({
-        purchase_units: [{ amount: { value: plan.price, currency_code: plan.currency }, description: plan.name }]
-      }),
-      onApprove: async (data, actions) => {
-        const order = await actions.order.capture();
-        onSuccess(order, plan);
-      },
-      onError: (err) => { console.error('PayPal error:', err); alert('Payment failed. Please try again.'); }
-    }).render(containerRef.current);
+    loadPayPalScript().then(() => {
+      setLoading(false);
+      if (!containerRef.current) return;
+      window.paypal.Buttons({
+        style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', height: 48 },
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: plan.price, currency_code: plan.currency }, description: plan.name }]
+        }),
+        onApprove: async (data, actions) => {
+          const order = await actions.order.capture();
+          onSuccess(order, plan);
+        },
+        onError: (err) => { console.error('PayPal error:', err); alert('Payment failed. Please try again.'); }
+      }).render(containerRef.current);
+    }).catch(() => { setLoading(false); setError('Failed to load PayPal. Please check your connection.'); });
   }, []);
 
+  if (loading) return <div style={{textAlign:'center',padding:'16px',color:'#5A9A8E',fontSize:14}}>⏳ Loading PayPal...</div>;
+  if (error) return <div style={{textAlign:'center',padding:'16px',color:'#E05C5C',fontSize:14}}>{error}</div>;
   return <div ref={containerRef} style={{marginTop:12}}/>;
 };
 
