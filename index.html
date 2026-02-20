@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="light"/>
+  <title>Mindfit</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#F4FBFA;font-family:'DM Sans',sans-serif;color:#2D7060;min-height:100vh}
+    button{cursor:pointer;font-family:'DM Sans',sans-serif;border:none;background:none}
+    input,textarea,select{font-family:'DM Sans',sans-serif;font-size:16px}
+    .card{background:#fff;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+    .cw{background:#FAFEFE;border-radius:20px;border:1px solid #C8EDE6}
+    .bp{background:#3BAA8C;color:#fff;border-radius:14px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .bs{background:#52C9A8;color:#fff;border-radius:14px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .bo{background:transparent;border:2px solid #3BAA8C;color:#3BAA8C;border-radius:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .inp{border:1.5px solid #B8E8DF;border-radius:12px;padding:12px 16px;font-size:16px;background:#FAFEFE;color:#2D7060;width:100%;outline:none}
+    .inp:focus{border-color:#3BAA8C}
+    .ts{background:#D4F2EB;color:#2D9078;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;display:inline-block}
+    .td{background:#3BAA8C;color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;display:inline-block}
+    .hdr{background:linear-gradient(135deg,#3BAA8C,#52C9A8)}
+    .st{background:#fff;border-radius:18px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .ov{position:fixed;inset:0;background:rgba(30,80,60,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+    .sh{background:#FAFEFE;border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:28px 24px 40px}
+    .hdl{width:36px;height:4px;background:#B8E8DF;border-radius:2px;margin:0 auto 24px}
+    .upc{background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:18px;color:white;padding:20px}
+    .bdg{background:#E05C5C;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;position:absolute;top:6px;right:2px}
+    ::-webkit-scrollbar{width:0}
+    @media(prefers-color-scheme:dark){body{background:#F4FBFA!important;color:#2D7060!important}.sh{background:#FAFEFE!important}.inp{background:#FAFEFE!important;color:#2D7060!important}}
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+var SHEETS='https://script.google.com/macros/s/AKfycbwhfh02uDuFnpPzoLbtrFOO-lT1DvVzwrk2Zp2ZwZ8gFpejkCyfTT5-2I2h4Q2sJXU7wg/exec';
+var CNAME='dblqwqgnz',CPRES='mindfit_posts';
+var PPID='ARllutZeJShzQMPZMOwIX7vD8CRA4g-LBq9-DnTjHi5tn4H8qrfrgkT0LX_fcDnmiT3zktRdoNM6F-B1';
+var CPW='9324';
+var FL=['','Still hungry','A little full','Just right','Pretty full','Very full'];
+var PLANS=[
+  {id:'monthly',name:'Monthly Plan',price:'150.00',desc:'Full coaching - 1 month',e:'🌿'},
+  {id:'quarterly',name:'3-Month Plan',price:'400.00',desc:'Best value — save SGD 50',e:'⭐'},
+  {id:'session',name:'Single Session',price:'80.00',desc:'One-on-one session',e:'💬'}
+];
+
+function lsGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):[]}catch(e){return[]}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsStr(k){return localStorage.getItem(k)||''}
+function lsSetStr(k,v){localStorage.setItem(k,v)}
+function lsRm(k){localStorage.removeItem(k)}
+
+function apiCall(tab,action,params){
+  params=params||{};
+  return new Promise(function(ok,fail){
+    var cb='cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    var url=new URL(SHEETS);
+    url.searchParams.set('tab',tab);
+    url.searchParams.set('action',action);
+    url.searchParams.set('callback',cb);
+    Object.keys(params).forEach(function(k){
+      var v=params[k];
+      url.searchParams.set(k,typeof v==='object'?JSON.stringify(v):String(v));
+    });
+    var el=document.createElement('script');
+    var t=setTimeout(function(){cleanup();fail('timeout')},15000);
+    function cleanup(){clearTimeout(t);delete window[cb];if(el.parentNode)el.parentNode.removeChild(el)}
+    window[cb]=function(d){cleanup();ok(d)};
+    el.onerror=function(){cleanup();fail('error')};
+    el.src=url.toString();
+    document.head.appendChild(el);
+  });
+}
+
+function uploadImg(file){
+  var fd=new FormData();
+  fd.append('file',file);
+  fd.append('upload_preset',CPRES);
+  return fetch('https://api.cloudinary.com/v1_1/'+CNAME+'/image/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json()})
+    .then(function(d){if(d.secure_url)return d.secure_url;throw new Error('upload failed')});
+}
+
+function loadPP(){
+  return new Promise(function(ok,fail){
+    if(window.paypal){ok();return}
+    var s=document.createElement('script');
+    s.src='https://www.paypal.com/sdk/js?client-id='+PPID+'&currency=SGD&components=buttons';
+    s.onload=ok;s.onerror=fail;
+    document.body.appendChild(s);
+  });
+}
+
+function today(){return new Date().toISOString().split('T')[0]}
+function todayLabel(){return new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+function nowTime(){return new Date().toTimeString().slice(0,5)}
+function nowTs(){return new Date().toLocaleString()}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+var S={
+  mode:'client',
+  clientName:lsStr('clientName'),
+  meals:lsGet('meals'),
+  posts:lsGet('posts'),
+  meetings:lsGet('meetings'),
+  journals:lsGet('journals'),
+  inquiries:lsGet('inquiries'),
+  tab:'meals',
+  selClient:'all',
+  filterType:'all',
+  modal:'',
+  formMeal:{date:today(),time:nowTime(),mt:'Breakfast',full:'',sat:''},
+  formJrn:{date:today(),mood:'',energy:''},
+  formEm:{date:today(),time:nowTime(),type:'Binge Eating'},
+  formInq:{cat:'Diet'},
+  expMeals:{},expJournals:{},expDates:{},expInq:{},
+  selMeal:'',ansId:'',ansText:'',
+  saving:false,syncMsg:'',
+  tmpName:'',tmpPw:'',cpw:'',cpw2:'',
+  ppSel:null,ppPaid:null,
+  postImg:'',postPrev:'',postUp:false
+};
+
+var rtimer=null;
+function render(){
+  clearTimeout(rtimer);
+  rtimer=setTimeout(function(){
+    try{
+      document.getElementById('app').innerHTML=buildApp();
+      attachEvents();
+    }catch(e){console.error('render error',e)}
+  },16);
+}
+
+function setState(patch){
+  Object.keys(patch).forEach(function(k){S[k]=patch[k]});
+  render();
+}
+
+function sync(){
+  setState({syncMsg:'Syncing...'});
+  Promise.all([
+    apiCall('meals','getAll'),
+    apiCall('posts','getAll'),
+    apiCall('meetings','getAll'),
+    apiCall('journals','getAll'),
+    apiCall('inquiries','getAll')
+  ]).then(function(res){
+    var m=res[0],p=res[1],mt=res[2],j=res[3],inq=res[4];
+    var patch={syncMsg:'✓ Synced'};
+    if(m&&m.data){
+      var d=m.data.map(function(r){
+        var fb=r.feedback;
+        if(typeof fb==='string'){try{fb=JSON.parse(fb)}catch(e){fb=[]}}
+        if(!Array.isArray(fb))fb=[];
+        return Object.assign({},r,{feedback:fb,isEmergency:r.isEmergency==='TRUE'||r.isEmergency===true});
+      }).reverse();
+      patch.meals=d;lsSet('meals',d);
+    }
+    if(p&&p.data){var d2=p.data.reverse();patch.posts=d2;lsSet('posts',d2)}
+    if(mt&&mt.data){var d3=mt.data.sort(function(a,b){return new Date(a.date+' '+a.time)-new Date(b.date+' '+b.time)});patch.meetings=d3;lsSet('meetings',d3)}
+    if(j&&j.data){var d4=j.data.reverse();patch.journals=d4;lsSet('journals',d4)}
+    if(inq&&inq.data){var d5=inq.data.map(function(r){return Object.assign({},r,{resolved:r.resolved==='TRUE'||r.resolved===true})}).reverse();patch.inquiries=d5;lsSet('inquiries',d5)}
+    setState(patch);
+    setTimeout(function(){setState({syncMsg:''})},3000);
+  }).catch(function(){
+    setState({syncMsg:'Sync failed'});
+    setTimeout(function(){setState({syncMsg:''})},3000);
+  });
+}
+
+function buildApp(){
+  var mode=S.mode,clientName=S.clientName,tab=S.tab,selClient=S.selClient,filterType=S.filterType;
+  var meals=S.meals,posts=S.posts,meetings=S.meetings,journals=S.journals,inquiries=S.inquiries;
+  var td=today(),tl=todayLabel();
+
+  var clients=[];
+  meals.forEach(function(m){if(m.clientName&&clients.indexOf(m.clientName)===-1)clients.push(m.clientName)});
+
+  var fMeals=meals.filter(function(m){
+    var cm=mode==='coach'?(selClient==='all'||m.clientName===selClient):m.clientName===clientName;
+    return cm&&(filterType==='all'||m.mealType===filterType);
+  });
+  var todayMeals=fMeals.filter(function(m){return m.date===td});
+  var byDate={};
+  fMeals.forEach(function(m){if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m)});
+  var sortedDates=Object.keys(byDate).sort(function(a,b){return new Date(b)-new Date(a)});
+
+  var fMtg=meetings.filter(function(m){return mode==='coach'?(selClient==='all'||m.clientName===selClient):m.clientName===clientName});
+  var now=new Date();
+  var upMtg=fMtg.filter(function(m){return new Date(m.date+' '+m.time)>=now});
+  var pastMtg=fMtg.filter(function(m){return new Date(m.date+' '+m.time)<now}).sort(function(a,b){return new Date(b.date+' '+b.time)-new Date(a.date+' '+a.time)});
+
+  var relM=mode==='coach'?(selClient==='all'?meals:meals.filter(function(m){return m.clientName===selClient})):meals.filter(function(m){return m.clientName===clientName});
+  var relJ=mode==='coach'?(selClient==='all'?journals:journals.filter(function(j){return j.clientName===selClient})):journals.filter(function(j){return j.clientName===clientName});
+  var wk=new Date();wk.setDate(wk.getDate()-7);
+  var stats={
+    wm:relM.filter(function(m){return new Date(m.date)>=wk&&!m.isEmergency}).length,
+    sn:relM.filter(function(m){return m.isEmergency}).length,
+    je:relJ.length,
+    wf:relM.filter(function(m){return(m.feedback||[]).length>0}).length,
+    tc:clients.length
+  };
+
+  var fInq=mode==='coach'?(selClient==='all'?inquiries:inquiries.filter(function(i){return i.clientName===selClient})):inquiries.filter(function(i){return i.clientName===clientName});
+  var urc=fInq.filter(function(i){return!i.resolved&&!i.answer}).length;
+
+  var TABS=[
+    {id:'meals',ic:'🍽️',l:'Meals'},
+    {id:'journal',ic:'📔',l:'Journal'},
+    {id:'stats',ic:'📊',l:'Stats'},
+    {id:'inquiries',ic:'💬',l:'Q&A'},
+    {id:'posts',ic:'📢',l:mode==='client'?'Notice':'Posts'},
+    {id:'meetings',ic:'📅',l:'Meetings'},
+    {id:'payment',ic:'💳',l:'Payment'}
+  ];
+
+  var h='<div style="background:#F4FBFA;min-height:100vh">';
+  if(S.saving)h+='<div style="position:fixed;top:0;left:0;right:0;z-index:100;background:#3BAA8C;color:white;text-align:center;padding:8px;font-size:13px;font-weight:600">Saving...</div>';
+
+  // ── Modal ──
+  if(S.modal){
+    h+='<div class="ov" onclick="closeModal()">';
+    h+='<div class="sh" onclick="event.stopPropagation()">';
+    h+='<div class="hdl"></div>';
+    if(S.modal==='coach'){
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:8px">Coach Access</h2>';
+      h+='<p style="color:#5A9A8E;margin-bottom:24px">Enter your password</p>';
+      h+='<input id="m-cpw" type="password" class="inp" placeholder="Password" style="margin-bottom:16px"/>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      h+='<button class="bp" style="padding:14px" onclick="verifyCoach()">Enter</button>';
+      h+='<button class="bo" style="padding:14px" onclick="closeModal()">Cancel</button>';
+      h+='</div>';
+    } else if(S.modal==='changePw'){
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:8px">Verify Identity</h2>';
+      h+='<p style="color:#5A9A8E;margin-bottom:24px">Enter password to change name</p>';
+      h+='<input id="m-cpw2" type="password" class="inp" placeholder="Your Password" style="margin-bottom:16px"/>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      h+='<button class="bp" style="padding:14px" onclick="verifyChange()">Verify</button>';
+      h+='<button class="bo" style="padding:14px" onclick="closeModal()">Cancel</button>';
+      h+='</div>';
+    } else if(S.modal==='meal'){
+      var fm=S.formMeal;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">Log a Meal</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:16px">';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Date</label><input type="date" id="f-date" value="'+esc(fm.date)+'" class="inp"/></div><div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Time</label><input type="time" id="f-time" value="'+esc(fm.time)+'" class="inp"/></div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:8px">Meal Type</label><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">';
+      ['Breakfast','Lunch','Dinner','Snack'].forEach(function(t){h+='<button onclick="setMT(\''+t+'\')" style="padding:10px 4px;font-size:13px;font-weight:600;border-radius:10px;border:none;cursor:pointer;background:'+(fm.mt===t?'#3BAA8C':'#D4F2EB')+';color:'+(fm.mt===t?'#fff':'#2D9078')+'">'+t+'</button>'});
+      h+='</div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">What did you eat?</label><textarea id="f-foods" class="inp" rows="3" placeholder="Describe your meal..." style="resize:none"></textarea></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:8px">How full did you feel? 🍽️</label><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">';
+      [{v:'1',l:'Still hungry',e:'😶'},{v:'2',l:'A little full',e:'🙂'},{v:'3',l:'Just right',e:'😊'},{v:'4',l:'Pretty full',e:'😌'},{v:'5',l:'Very full',e:'🤢'}].forEach(function(o){
+        h+='<button onclick="setFull(\''+o.v+'\')" style="padding:10px 4px;background:'+(fm.full===o.v?'#3BAA8C':'#D4F2EB')+';color:'+(fm.full===o.v?'white':'#2D9078')+';border-radius:12px;border:none;cursor:pointer;font-size:11px;font-weight:600;text-align:center"><div style="font-size:20px;margin-bottom:4px">'+o.e+'</div>'+o.l+'</button>';
+      });
+      h+='</div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:8px">How long did you stay full? ⏱️</label><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">';
+      ['1-2h','2-3h','3-4h','4h+'].forEach(function(o){h+='<button onclick="setSat(\''+o+'\')" style="padding:12px 6px;background:'+(fm.sat===o?'#52C9A8':'#D4F2EB')+';color:'+(fm.sat===o?'white':'#2D9078')+';border-radius:12px;border:none;cursor:pointer;font-size:12px;font-weight:600">'+o+'</button>'});
+      h+='</div></div>';
+      h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="submitMeal()"'+(S.saving?' disabled':'')+'>Save Meal</button>';
+      h+='</div>';
+    } else if(S.modal==='journal'){
+      var fj=S.formJrn;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">Daily Journal</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:18px">';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Date</label><input type="date" id="j-date" value="'+esc(fj.date)+'" class="inp"/></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:10px">How did eating feel today?</label><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">';
+      ['😢','😕','😐','🙂','😊'].forEach(function(e2){h+='<button onclick="setMood(\''+e2+'\')" style="padding:12px 4px;font-size:26px;border:none;cursor:pointer;border-radius:12px;background:'+(fj.mood===e2?'#D4F2EB':'#F4FBFA')+'">'+e2+'</button>'});
+      h+='</div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:10px">Energy Level</label><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">';
+      ['1','2','3','4','5'].forEach(function(l){h+='<button onclick="setEnergy(\''+l+'\')" style="padding:12px 4px;font-size:16px;font-weight:700;border:none;cursor:pointer;border-radius:10px;background:'+(fj.energy===l?'#52C9A8':'#D4F2EB')+';color:'+(fj.energy===l?'white':'#2D9078')+'">'+l+'</button>'});
+      h+='</div><p style="font-size:12px;color:#5A9A8E;margin-top:6px;text-align:center">1 = Very Low · 5 = Very High</p></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">How are you feeling?</label><textarea id="j-feel" class="inp" rows="4" placeholder="Share your thoughts..." style="resize:none"></textarea></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Additional Notes</label><textarea id="j-notes" class="inp" rows="3" placeholder="Anything else..." style="resize:none"></textarea></div>';
+      h+='<button class="bs" style="width:100%;padding:15px;font-size:16px" onclick="submitJournal()"'+(S.saving?' disabled':'')+'>Save Journal</button>';
+      h+='</div>';
+    } else if(S.modal==='em'){
+      var fe=S.formEm;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">Special Note</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:16px">';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Date</label><input type="date" id="e-date" value="'+esc(fe.date)+'" class="inp"/></div><div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Time</label><input type="time" id="e-time" value="'+esc(fe.time)+'" class="inp"/></div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:10px">What happened?</label>';
+      [{v:'Binge Eating',e:'🍔'},{v:'Purging',e:'🤢'},{v:'Meal Avoidance',e:'😰'}].forEach(function(t){
+        h+='<button onclick="setEmType(\''+t.v+'\')" style="width:100%;padding:14px 16px;margin-bottom:8px;background:'+(fe.type===t.v?'#D4F2EB':'#F4FBFA')+';border:2px solid '+(fe.type===t.v?'#3BAA8C':'transparent')+';border-radius:14px;font-weight:600;font-size:15px;text-align:left;display:flex;align-items:center;gap:10px;cursor:pointer;color:'+(fe.type===t.v?'#2D9078':'#5A9A8E')+'"><span style="font-size:22px">'+t.e+'</span>'+t.v+'</button>';
+      });
+      h+='</div><div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Notes (Optional)</label><textarea id="e-notes" class="inp" rows="3" placeholder="How are you feeling?" style="resize:none"></textarea></div>';
+      h+='<div style="background:#D4F2EB;border-radius:14px;padding:14px"><p style="color:#2D9078;font-size:14px;line-height:1.6;text-align:center">🌿 It\'s okay. Every step of awareness is part of healing.</p></div>';
+      h+='<button class="bs" style="width:100%;padding:15px;font-size:16px" onclick="submitEm()"'+(S.saving?' disabled':'')+'>Submit Report</button>';
+      h+='</div>';
+    } else if(S.modal==='inq'){
+      var fi=S.formInq;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">New Question</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:16px">';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:8px">Category</label><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+      ['Diet','Exercise','Other'].forEach(function(c){h+='<button onclick="setInqCat(\''+c+'\')" style="padding:12px;font-size:14px;font-weight:600;border:none;cursor:pointer;border-radius:12px;background:'+(fi.cat===c?'#3BAA8C':'#D4F2EB')+';color:'+(fi.cat===c?'white':'#2D9078')+'">'+c+'</button>'});
+      h+='</div></div>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Your Question</label><textarea id="inq-q" class="inp" rows="5" placeholder="Ask your coach anything..." style="resize:none"></textarea></div>';
+      h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="submitInq()"'+(S.saving?' disabled':'')+'>Send Question</button>';
+      h+='</div>';
+    } else if(S.modal==='post'){
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">New Post</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:14px">';
+      h+='<input id="p-title" class="inp" placeholder="Title" style="font-weight:600;font-size:16px"/>';
+      h+='<textarea id="p-content" class="inp" rows="6" placeholder="Write your announcement..." style="resize:none"></textarea>';
+      h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:8px">Photo (Optional)</label>';
+      h+='<label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#E8F8F4;border:1.5px dashed #3BAA8C;border-radius:12px;cursor:pointer;color:#2D9078;font-weight:600;font-size:14px">';
+      h+=(S.postUp?'⏳ Uploading...':S.postImg?'✓ Photo uploaded':'📷 Add Photo');
+      h+='<input type="file" accept="image/*" onchange="handlePostImg(event)" style="display:none"/></label>';
+      if(S.postPrev)h+='<img src="'+esc(S.postPrev)+'" style="width:100%;border-radius:12px;margin-top:8px;max-height:200px;object-fit:cover"/>';
+      h+='</div>';
+      h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="submitPost()"'+(S.saving||S.postUp?' disabled':'')+'>Publish</button>';
+      h+='</div>';
+    } else if(S.modal==='mtg'){
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078">Schedule Meeting</h2><button onclick="closeModal()" style="color:#52C9A8;font-size:22px">✕</button></div>';
+      h+='<div style="display:flex;flex-direction:column;gap:14px">';
+      if(mode==='coach')h+='<input id="m-cn" class="inp" placeholder="Client Name" style="font-weight:600"/>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="date" id="m-date" value="'+today()+'" class="inp"/><input type="time" id="m-time" class="inp"/></div>';
+      h+='<input id="m-title" class="inp" placeholder="Meeting Title" style="font-weight:600"/>';
+      h+='<textarea id="m-notes" class="inp" rows="3" placeholder="Notes (optional)" style="resize:none"></textarea>';
+      h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="submitMtg()"'+(S.saving?' disabled':'')+'>Schedule</button>';
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
+
+  // ── Header ──
+  h+='<div class="hdr" style="padding:20px 20px 0">';
+  h+='<div style="max-width:640px;margin:0 auto">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">';
+  h+='<div><h1 style="font-family:\'DM Serif Display\',serif;font-size:32px;color:#fff;letter-spacing:-0.5px">Mindfit</h1><p style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:2px">Your Journey with Mindfit</p></div>';
+  h+='<div style="display:flex;gap:8px;align-items:center">';
+  if(S.syncMsg)h+='<span style="font-size:12px;color:rgba(255,255,255,0.9);font-weight:600">'+esc(S.syncMsg)+'</span>';
+  h+='<button onclick="sync()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:6px 10px;color:#fff;font-size:12px;font-weight:600">Sync</button>';
+  h+='<button onclick="'+(mode==='coach'?'setState({mode:\'client\'})':'openModal(\'coach\')')+'" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);border-radius:10px;padding:8px 12px;font-size:18px">'+(mode==='coach'?'👤':'👥')+'</button>';
+  h+='</div></div>';
+
+  if(mode==='coach'&&clients.length>0){
+    h+='<div style="margin-bottom:16px"><select onchange="setState({selClient:this.value})" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:12px;color:#fff;font-size:14px;outline:none">';
+    h+='<option value="all" style="color:#333">All Clients ('+clients.length+')</option>';
+    clients.forEach(function(c){h+='<option value="'+esc(c)+'" style="color:#333"'+(selClient===c?' selected':'')+'>'+esc(c)+'</option>'});
+    h+='</select></div>';
+  }
+
+  if(mode==='client'&&!clientName){
+    h+='<div style="background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.2)">';
+    h+='<p style="color:#fff;font-weight:600;margin-bottom:14px;font-family:\'DM Serif Display\',serif;font-size:18px">Welcome! Let\'s get started.</p>';
+    h+='<div style="display:flex;flex-direction:column;gap:10px">';
+    h+='<input id="reg-name" placeholder="Your Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/>';
+    h+='<input id="reg-pw" type="password" placeholder="Set a Password" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/>';
+    h+='<button onclick="signup()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Start My Journey</button>';
+    h+='</div></div>';
+  }
+
+  if(mode==='client'&&clientName){
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:16px">';
+    h+='<div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;background:rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px">'+esc(clientName[0].toUpperCase())+'</div>';
+    h+='<span style="color:#fff;font-weight:600;font-size:15px">'+esc(clientName)+'</span></div>';
+    h+='<button onclick="openModal(\'changePw\')" style="color:#fff;font-size:13px;font-weight:600;background:none;border:none;cursor:pointer">Change</button>';
+    h+='</div>';
+  }
+
+  h+='<div style="display:flex;overflow-x:auto">';
+  TABS.forEach(function(t){
+    h+='<button onclick="setState({tab:\''+t.id+'\'})" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px 14px;background:none;border:none;border-bottom:'+(tab===t.id?'2.5px solid #fff':'2.5px solid transparent')+';color:'+(tab===t.id?'#fff':'rgba(255,255,255,0.55)')+';cursor:pointer;white-space:nowrap;min-width:56px">';
+    h+='<span style="font-size:18px">'+t.ic+'</span>';
+    h+='<span style="font-size:11px;font-weight:600">'+t.l+'</span>';
+    if(t.id==='inquiries'&&urc>0)h+='<span class="bdg">'+urc+'</span>';
+    h+='</button>';
+  });
+  h+='</div></div></div>';
+
+  // ── Content ──
+  h+='<div style="max-width:640px;margin:0 auto;padding:20px 16px 100px">';
+
+  if(tab==='meals'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<div><h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Today\'s Meals</h2><p style="color:#5A9A8E;font-size:13px;margin-top:2px">'+tl+'</p></div>';
+    h+='<select onchange="setState({filterType:this.value})" style="padding:8px 12px;border:1.5px solid #C8EDE6;border-radius:10px;font-size:13px;background:#fff;color:#2D9078;outline:none">';
+    h+='<option value="all"'+(filterType==='all'?' selected':'')+'>All</option>';
+    ['Breakfast','Lunch','Dinner','Snack'].forEach(function(t){h+='<option'+(filterType===t?' selected':'')+'>'+t+'</option>'});
+    h+='</select></div>';
+    if(mode==='client'&&clientName){
+      h+='<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">';
+      h+='<button onclick="openModal(\'meal\')" style="width:100%;padding:18px;background:#3BAA8C;color:#fff;border:none;border-radius:16px;font-weight:600;font-size:16px;cursor:pointer">➕ Log a Meal</button>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      h+='<button onclick="openModal(\'journal\')" style="padding:16px;background:#fff;border:1.5px solid #C8EDE6;border-radius:16px;font-weight:600;font-size:14px;cursor:pointer;color:#2D9078">📔 Daily Journal</button>';
+      h+='<button onclick="openModal(\'em\')" style="padding:16px;background:#E8F8F4;border:1.5px solid #B8D4B9;border-radius:16px;font-weight:600;font-size:14px;cursor:pointer;color:#3BAA8C">Special Note</button>';
+      h+='</div></div>';
+    }
+    if(todayMeals.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:12px">🍽️</div><p style="color:#5A9A8E;font-weight:600;font-size:16px">No meals logged today</p><p style="color:#A8DDD5;font-size:14px;margin-top:6px">Past records are in the Stats tab</p></div>';
+    } else {
+      todayMeals.forEach(function(meal){h+=buildMealCard(meal,mode)});
+    }
+  }
+
+  if(tab==='journal'){
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:20px">Journal</h2>';
+    if(relJ.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:12px">📔</div><p style="color:#5A9A8E;font-weight:600;font-size:16px">No journal entries yet</p></div>';
+    } else {
+      relJ.forEach(function(j){
+        var exp=S.expJournals[j.id];
+        h+='<div class="cw" style="margin-bottom:10px;overflow:hidden">';
+        h+='<button onclick="toggleJ(\''+j.id+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:12px;text-align:left;background:none;border:none;cursor:pointer">';
+        h+='<span style="font-size:28px">'+(j.mood||'📔')+'</span>';
+        h+='<div style="flex:1"><p style="font-weight:600;color:#2D9078;font-size:15px">'+esc(j.date)+'</p><p style="color:#5A9A8E;font-size:13px">'+esc(j.clientName)+'</p></div>';
+        if(j.energy)h+='<span style="font-size:13px;color:#3BAA8C;font-weight:700">⚡'+esc(j.energy)+'/5</span>';
+        h+='<span style="color:#52C9A8;margin-left:8px">'+(exp?'▲':'▼')+'</span></button>';
+        if(exp){
+          h+='<div style="padding:0 18px 18px;border-top:1px solid #D4F2EB">';
+          h+='<div style="background:#E8F8F4;border-radius:12px;padding:12px 14px;margin-top:14px;margin-bottom:10px">';
+          h+='<p style="font-size:11px;font-weight:700;color:#5A9A8E;margin-bottom:4px;text-transform:uppercase">Feelings</p>';
+          h+='<p style="color:#2D7060;line-height:1.6;font-size:14px">'+esc(j.feelings)+'</p></div>';
+          if(j.notes)h+='<p style="color:#5A9A8E;font-size:14px;line-height:1.5">'+esc(j.notes)+'</p>';
+          h+='</div>';
+        }
+        h+='</div>';
+      });
+    }
+  }
+
+  if(tab==='stats'){
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:20px">Progress</h2>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">';
+    if(mode==='coach'&&selClient==='all')h+='<div class="st" style="grid-column:span 2;background:linear-gradient(135deg,#3BAA8C,#52C9A8);color:white"><p style="font-size:40px;font-weight:700;font-family:\'DM Serif Display\',serif">'+stats.tc+'</p><p style="opacity:.85;font-size:13px;margin-top:4px;font-weight:600">Total Clients</p></div>';
+    [{v:stats.wm,l:'Meals This Week',i:'🍽️'},{v:stats.sn,l:'Special Notes',i:'📋'},{v:stats.je,l:'Journal Entries',i:'📔'},{v:stats.wf,l:'With Feedback',i:'💬'}].forEach(function(s){
+      h+='<div class="st"><p style="font-size:13px;margin-bottom:8px">'+s.i+'</p><p style="font-size:32px;font-weight:700;color:#1A6B58;font-family:\'DM Serif Display\',serif">'+s.v+'</p><p style="color:#4A8A7E;font-size:13px;font-weight:600;margin-top:4px">'+s.l+'</p></div>';
+    });
+    h+='</div><h3 style="font-weight:700;color:#1A6B58;font-size:17px;margin-bottom:14px">All Records</h3>';
+    if(sortedDates.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:40px;margin-bottom:12px">📊</div><p style="color:#5A9A8E;font-weight:600">No records yet</p></div>';
+    } else {
+      sortedDates.forEach(function(date){
+        var dm=byDate[date];var exp=S.expDates[date];
+        h+='<div class="cw" style="margin-bottom:10px;overflow:hidden">';
+        h+='<button onclick="toggleD(\''+date+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;cursor:pointer">';
+        h+='<div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:700;color:#1A6B58;font-size:15px">'+esc(date)+'</span><span style="color:#4A8A7E;font-size:13px;font-weight:600">'+dm.length+' meals</span>';
+        var hasSp=dm.some(function(m){return m.isEmergency});
+        if(hasSp)h+='<span class="ts" style="font-size:11px">Special</span>';
+        if(date===td)h+='<span class="td" style="font-size:11px">Today</span>';
+        h+='</div><span style="color:#52C9A8">'+(exp?'▲':'▼')+'</span></button>';
+        if(exp){
+          h+='<div style="border-top:1px solid #D4F2EB">';
+          dm.forEach(function(meal,i){
+            h+='<div style="padding:12px 18px;border-bottom:'+(i<dm.length-1?'1px solid #D4F2EB':'none')+'">';
+            h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+            if(meal.isEmergency)h+='<span class="ts" style="font-size:11px">Special</span>';
+            else h+='<span class="td" style="font-size:11px">'+esc(meal.mealType)+'</span>';
+            h+='<span style="color:#5A9A8E;font-size:12px">'+esc(meal.time)+'</span>';
+            if(mode==='coach')h+='<span style="color:#3BAA8C;font-size:12px;font-weight:600">'+esc(meal.clientName)+'</span>';
+            h+='</div><p style="color:#2D7060;font-size:14px;line-height:1.5">'+esc(meal.foods)+'</p>';
+            if(meal.fullness||meal.satietyHours){
+              h+='<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">';
+              if(meal.fullness)h+='<span style="background:#D4F2EB;color:#2D9078;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600">🍽️ '+esc(FL[meal.fullness]||meal.fullness)+'</span>';
+              if(meal.satietyHours)h+='<span style="background:#D4F2EB;color:#2D9078;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600">⏱️ '+esc(meal.satietyHours)+'</span>';
+              h+='</div>';
+            }
+            (meal.feedback||[]).forEach(function(fb){h+='<p style="color:#3BAA8C;font-size:13px;margin-top:4px">💬 '+esc(fb.text)+'</p>'});
+            h+='</div>';
+          });
+          h+='</div>';
+        }
+        h+='</div>';
+      });
+    }
+  }
+
+  if(tab==='inquiries'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Q&A</h2>';
+    if(mode==='client'&&clientName)h+='<button onclick="openModal(\'inq\')" class="bp" style="padding:10px 18px;font-size:14px">+ Ask</button>';
+    h+='</div>';
+    if(fInq.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:12px">💬</div><p style="color:#5A9A8E;font-weight:600;font-size:16px">No inquiries yet</p></div>';
+    } else {
+      fInq.forEach(function(inq){
+        var exp=S.expInq[inq.id];
+        var bc=inq.resolved?'#52C9A8':inq.answer?'#3BAA8C':'#F0B86E';
+        h+='<div style="background:'+(inq.resolved?'#F4FBFA':'#fff')+';border:1.5px solid #C8EDE6;border-left:4px solid '+bc+';border-radius:16px;margin-bottom:10px;overflow:hidden;opacity:'+(inq.resolved?0.8:1)+'">';
+        h+='<button onclick="toggleInq(\''+inq.id+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;cursor:pointer">';
+        h+='<div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0"><span class="ts" style="font-size:11px;flex-shrink:0">'+esc(inq.category)+'</span><span style="font-weight:500;color:#2D7060;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(inq.question)+'</span></div>';
+        h+='<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
+        if(inq.resolved)h+='<span style="color:#3BAA8C;font-size:16px">✓</span>';
+        else if(!inq.answer)h+='<span style="font-size:11px;color:#C8963E;font-weight:600;background:#FEF3E2;padding:2px 8px;border-radius:10px">Pending</span>';
+        else h+='<span style="font-size:11px;color:#2D9078;font-weight:600;background:#D4F2EB;padding:2px 8px;border-radius:10px">Answered</span>';
+        h+='<span style="color:#52C9A8">'+(exp?'▲':'▼')+'</span></div></button>';
+        if(exp){
+          h+='<div style="padding:0 18px 18px;border-top:1px solid #D4F2EB">';
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-bottom:14px">';
+          h+='<span style="color:#5A9A8E;font-size:12px">'+esc(inq.date)+' · '+esc(inq.clientName)+'</span>';
+          if(mode==='coach'){
+            h+='<div style="display:flex;gap:8px">';
+            h+='<button onclick="toggleRes(\''+inq.id+'\')" style="font-size:12px;padding:4px 12px;background:'+(inq.resolved?'#E8F8F4':'#D4F2EB')+';color:'+(inq.resolved?'#5A9A8E':'#2D9078')+';border-radius:10px;font-weight:600;border:none;cursor:pointer">'+(inq.resolved?'Unresolve':'✓ Resolved')+'</button>';
+            h+='<button onclick="delInq(\''+inq.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">✕</button>';
+            h+='</div>';
+          }
+          h+='</div>';
+          h+='<div style="background:#E8F8F4;border-radius:12px;padding:12px 14px;margin-bottom:12px"><p style="font-size:11px;font-weight:700;color:#5A9A8E;margin-bottom:4px;text-transform:uppercase">Question</p><p style="color:#2D7060;line-height:1.6;font-size:14px">'+esc(inq.question)+'</p></div>';
+          if(inq.answer){
+            h+='<div style="background:#3BAA8C;border-radius:14px;padding:14px 18px;color:white"><p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:4px;text-transform:uppercase">Coach Reply</p><p style="font-size:14px;line-height:1.6">'+esc(inq.answer)+'</p></div>';
+          } else if(mode==='coach'){
+            if(S.ansId==inq.id){
+              h+='<div style="display:flex;flex-direction:column;gap:8px"><textarea id="ans-txt" class="inp" rows="4" placeholder="Write your reply..." style="resize:none">'+esc(S.ansText)+'</textarea>';
+              h+='<div style="display:flex;gap:8px"><button onclick="submitAnswer(\''+inq.id+'\')" class="bp" style="flex:1;padding:12px"'+(S.saving?' disabled':'')+'>Submit Reply</button>';
+              h+='<button onclick="setState({ansId:\'\',ansText:\'\'})" style="padding:12px 14px;background:#E8F8F4;border:none;border-radius:12px;cursor:pointer">✕</button></div></div>';
+            } else {
+              h+='<button onclick="setState({ansId:\''+inq.id+'\'})" class="bp" style="width:100%;padding:12px">Reply</button>';
+            }
+          } else {
+            h+='<div style="background:#E8F8F4;border-radius:12px;padding:14px;text-align:center"><p style="color:#5A9A8E;font-size:14px">Your coach will reply soon 🌿</p></div>';
+          }
+          h+='</div>';
+        }
+        h+='</div>';
+      });
+    }
+  }
+
+  if(tab==='posts'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">'+(mode==='client'?'Notice':'Posts')+'</h2>';
+    if(mode==='coach')h+='<button onclick="openModal(\'post\')" class="bp" style="padding:10px 18px;font-size:14px">+ New Post</button>';
+    h+='</div>';
+    if(posts.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:12px">📢</div><p style="color:#5A9A8E;font-weight:600">No posts yet</p></div>';
+    } else {
+      posts.forEach(function(post){
+        h+='<div class="card" style="padding:22px;margin-bottom:12px">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
+        h+='<div><h3 style="font-family:\'DM Serif Display\',serif;font-size:19px;color:#1A6B58;margin-bottom:4px">'+esc(post.title)+'</h3><p style="color:#5A9A8E;font-size:12px">'+esc(post.date)+'</p></div>';
+        if(mode==='coach')h+='<button onclick="delPost(\''+post.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">✕</button>';
+        h+='</div>';
+        if(post.imageUrl)h+='<img src="'+esc(post.imageUrl)+'" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:300px;object-fit:cover"/>';
+        h+='<p style="color:#2D7060;line-height:1.7;font-size:15px;white-space:pre-line">'+esc(post.content)+'</p></div>';
+      });
+    }
+  }
+
+  if(tab==='meetings'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Meetings</h2>';
+    if(mode==='coach')h+='<button onclick="openModal(\'mtg\')" class="bp" style="padding:10px 18px;font-size:14px">+ Schedule</button>';
+    h+='</div>';
+    if(upMtg.length>0){
+      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Upcoming</p>';
+      upMtg.forEach(function(m){
+        h+='<div class="upc" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start">';
+        h+='<div><p style="font-family:\'DM Serif Display\',serif;font-size:20px;margin-bottom:6px">'+esc(m.title)+'</p><p style="opacity:.75;font-size:13px">'+esc(m.date)+' · '+esc(m.time)+'</p>';
+        if(mode==='coach')h+='<p style="opacity:.9;font-size:14px;margin-top:4px;font-weight:600">'+esc(m.clientName)+'</p>';
+        h+='</div>';
+        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-size:18px">✕</button>';
+        h+='</div>';
+        if(m.notes)h+='<p style="opacity:.8;font-size:14px;margin-top:10px;line-height:1.5">'+esc(m.notes)+'</p>';
+        h+='</div>';
+      });
+    }
+    if(pastMtg.length>0){
+      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:'+(upMtg.length>0?'24px':'0')+'">Past</p>';
+      if(mode==='client')h+='<div class="st" style="margin-bottom:14px;display:flex;align-items:center;gap:14px"><p style="font-size:36px;font-weight:700;color:#1A6B58;font-family:\'DM Serif Display\',serif">'+pastMtg.length+'</p><p style="color:#5A9A8E;font-size:14px;font-weight:600">Sessions completed</p></div>';
+      pastMtg.forEach(function(m){
+        h+='<div class="cw" style="padding:18px;margin-bottom:10px;opacity:.75"><div style="display:flex;justify-content:space-between">';
+        h+='<div><p style="font-weight:600;color:#2D9078;font-size:15px;margin-bottom:4px">'+esc(m.title)+'</p><p style="color:#5A9A8E;font-size:13px">'+esc(m.date)+' · '+esc(m.time)+'</p>';
+        if(mode==='coach')h+='<p style="color:#3BAA8C;font-size:13px;margin-top:4px">'+esc(m.clientName)+'</p>';
+        h+='</div>';
+        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:16px">✕</button>';
+        h+='</div></div>';
+      });
+    }
+    if(fMtg.length===0)h+='<div class="card" style="padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:12px">📅</div><p style="color:#5A9A8E;font-weight:600">No meetings yet</p></div>';
+  }
+
+  if(tab==='payment'){
+    if(mode==='coach'){
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:8px">Payment Plans</h2>';
+      h+='<p style="color:#5A9A8E;font-size:14px;margin-bottom:20px">Plans shown to your clients.</p>';
+      PLANS.forEach(function(p){
+        h+='<div class="card" style="padding:20px;margin-bottom:12px;display:flex;align-items:center;gap:14px">';
+        h+='<span style="font-size:32px">'+p.e+'</span>';
+        h+='<div><p style="font-weight:700;color:#1A6B58;font-size:16px">'+p.name+'</p><p style="color:#3BAA8C;font-size:20px;font-weight:700">SGD '+p.price+'</p><p style="color:#5A9A8E;font-size:13px">'+p.desc+'</p></div>';
+        h+='</div>';
+      });
+    } else if(S.ppPaid){
+      h+='<div style="text-align:center;padding:40px 20px">';
+      h+='<div style="font-size:64px;margin-bottom:16px">🎉</div>';
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;color:#1A6B58;margin-bottom:8px">Payment Successful!</h2>';
+      h+='<p style="color:#5A9A8E;font-size:15px;margin-bottom:8px">'+esc(S.ppPaid.name)+' — SGD '+esc(S.ppPaid.price)+'</p>';
+      h+='<div style="background:#E8F8F4;border-radius:16px;padding:20px;margin:24px 0"><p style="color:#2D9078;font-size:14px;line-height:1.7">🌿 Thank you! Your coach will be in touch shortly.</p></div>';
+      h+='<button onclick="setState({ppPaid:null,ppSel:null})" class="bo" style="padding:12px 24px">Back to Plans</button></div>';
+    } else {
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:8px">Payment</h2>';
+      h+='<p style="color:#5A9A8E;font-size:14px;margin-bottom:20px">Choose a plan to get started.</p>';
+      PLANS.forEach(function(plan){
+        var sel=S.ppSel&&S.ppSel.id===plan.id;
+        h+='<div onclick="selectPlan(\''+plan.id+'\')" style="background:'+(sel?'#E8F8F4':'#fff')+';border:'+(sel?'2px solid #3BAA8C':'1.5px solid #C8EDE6')+';border-radius:18px;padding:20px;margin-bottom:12px;cursor:pointer">';
+        h+='<div style="display:flex;align-items:center;gap:12px"><span style="font-size:32px">'+plan.e+'</span>';
+        h+='<div style="flex:1"><p style="font-weight:700;color:#1A6B58;font-size:16px">'+plan.name+'</p><p style="color:#3BAA8C;font-size:20px;font-weight:700">SGD '+plan.price+'</p><p style="color:#5A9A8E;font-size:13px">'+plan.desc+'</p></div>';
+        if(sel)h+='<span style="color:#3BAA8C;font-size:20px">✓</span>';
+        h+='</div>';
+        if(sel)h+='<div id="pp-container" onclick="event.stopPropagation()" style="margin-top:16px;border-top:1px solid #D4F2EB;padding-top:16px"><p style="color:#5A9A8E;font-size:13px;text-align:center;margin-bottom:8px">Complete payment with PayPal</p><div id="pp-btn"></div></div>';
+        h+='</div>';
+      });
+      h+='<div style="background:#F4FBFA;border-radius:14px;padding:14px;margin-top:4px"><p style="color:#5A9A8E;font-size:13px;text-align:center">🔒 Secure payment via PayPal · All major cards accepted</p></div>';
+    }
+  }
+
+  h+='</div></div>';
+  return h;
+}
+
+function buildMealCard(meal,mode){
+  var exp=S.expMeals[meal.id];var fbs=meal.feedback||[];
+  var h='<div style="background:'+(meal.isEmergency?'#E8F8F4':'#fff')+';border:1.5px solid '+(meal.isEmergency?'#B8D4B9':'#C8EDE6')+';border-radius:18px;overflow:hidden;margin-bottom:10px">';
+  h+='<button onclick="toggleM(\''+meal.id+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:12px;text-align:left;background:none;border:none;cursor:pointer">';
+  h+='<div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0">';
+  if(meal.isEmergency)h+='<span class="ts">Special</span>';
+  else h+='<span class="td">'+esc(meal.mealType)+'</span>';
+  h+='<span style="font-weight:600;color:#2D9078;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(meal.clientName)+'</span>';
+  h+='<span style="color:#5A9A8E;font-size:13px;flex-shrink:0">'+esc(meal.time)+'</span>';
+  if(fbs.length>0)h+='<span style="color:#5A9A8E;font-size:12px;flex-shrink:0">💬'+fbs.length+'</span>';
+  h+='</div><span style="color:#52C9A8">'+(exp?'▲':'▼')+'</span></button>';
+  if(exp){
+    h+='<div style="padding:0 18px 20px;border-top:1px solid #D4F2EB">';
+    if(mode==='coach')h+='<div style="display:flex;justify-content:flex-end;padding-top:12px;margin-bottom:8px"><button onclick="delMeal(\''+meal.id+'\')" style="color:#52C9A8;font-size:18px">✕</button></div>';
+    h+='<p style="color:#2D7060;line-height:1.6;margin-top:'+(mode!=='coach'?'14':'0')+'px;margin-bottom:12px">';
+    if(meal.isEmergency&&meal.emergencyType)h+='<span class="ts" style="margin-right:8px;margin-bottom:6px;display:inline-block">'+esc(meal.emergencyType)+'</span>';
+    h+=esc(meal.foods)+'</p>';
+    if(meal.fullness||meal.satietyHours){
+      h+='<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
+      if(meal.fullness)h+='<span style="background:#D4F2EB;color:#2D9078;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">🍽️ '+esc(FL[meal.fullness]||meal.fullness)+'</span>';
+      if(meal.satietyHours)h+='<span style="background:#D4F2EB;color:#2D9078;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">⏱️ '+esc(meal.satietyHours)+'</span>';
+      h+='</div>';
+    }
+    if(fbs.length>0){
+      fbs.forEach(function(fb){
+        h+='<div style="background:#E8F8F4;border-radius:14px;padding:12px 16px;margin-bottom:8px">';
+        h+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:700;color:#3BAA8C">'+esc(fb.author)+'</span><span style="font-size:11px;color:#5A9A8E">'+esc(fb.timestamp)+'</span></div>';
+        h+='<p style="color:#2D7060;font-size:14px">'+esc(fb.text)+'</p></div>';
+      });
+    }
+    if(mode==='coach'){
+      if(S.selMeal==meal.id){
+        h+='<div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid #D4F2EB">';
+        h+='<input id="fb-inp" class="inp" placeholder="Write feedback..." style="flex:1"/>';
+        h+='<button onclick="addFeedback(\''+meal.id+'\')" class="bs" style="padding:10px 14px">📤</button>';
+        h+='<button onclick="setState({selMeal:\'\'})" style="color:#52C9A8;padding:10px;font-size:18px">✕</button>';
+        h+='</div>';
+      } else {
+        h+='<button onclick="setState({selMeal:\''+meal.id+'\'})" style="color:#3BAA8C;font-weight:600;font-size:14px;padding-top:12px;border-top:1px solid #D4F2EB;width:100%;text-align:left;background:none;border:none;cursor:pointer">+ Add Feedback</button>';
+      }
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
+function attachEvents(){
+  // Auto focus modals
+  var cpw=document.getElementById('m-cpw');
+  if(cpw){cpw.focus();cpw.onkeydown=function(e){if(e.key==='Enter')verifyCoach()}}
+  var cpw2=document.getElementById('m-cpw2');
+  if(cpw2){cpw2.focus();cpw2.onkeydown=function(e){if(e.key==='Enter')verifyChange()}}
+
+  // PayPal
+  if(S.tab==='payment'&&S.ppSel&&!S.ppPaid){
+    var btn=document.getElementById('pp-btn');
+    if(btn&&!btn.dataset.loaded){
+      btn.dataset.loaded='1';
+      loadPP().then(function(){
+        var b=document.getElementById('pp-btn');
+        if(!b||!window.paypal)return;
+        window.paypal.Buttons({
+          style:{layout:'vertical',color:'gold',shape:'rect',label:'pay',height:48},
+          createOrder:function(_,a){return a.order.create({purchase_units:[{amount:{value:S.ppSel.price,currency_code:'SGD'},description:S.ppSel.name}]})},
+          onApprove:function(_,a){return a.order.capture().then(function(){setState({ppPaid:S.ppSel,ppSel:null})})},
+          onError:function(){alert('Payment failed. Please try again.')}
+        }).render('#pp-btn');
+      }).catch(function(){
+        var b=document.getElementById('pp-btn');
+        if(b)b.innerHTML='<p style="color:#E05C5C;text-align:center;padding:12px">Could not load PayPal.</p>';
+      });
+    }
+  }
+
+  // ans textarea
+  var at=document.getElementById('ans-txt');
+  if(at)at.oninput=function(e){S.ansText=e.target.value};
+}
+
+// ── Global handlers ──────────────────────────────────────────
+window.setState=setState;
+window.sync=sync;
+window.openModal=function(name){setState({modal:name})};
+window.closeModal=function(){setState({modal:''})};
+window.verifyCoach=function(){
+  var pw=document.getElementById('m-cpw')&&document.getElementById('m-cpw').value||S.cpw;
+  if(pw===CPW)setState({mode:'coach',modal:''});
+  else alert('Incorrect password');
+};
+window.verifyChange=function(){
+  var pw=document.getElementById('m-cpw2')&&document.getElementById('m-cpw2').value||S.cpw2;
+  if(pw===lsStr('clientPw')){lsRm('clientName');lsRm('clientPw');setState({clientName:'',modal:''});}
+  else alert('Incorrect password');
+};
+window.signup=function(){
+  var n=document.getElementById('reg-name')&&document.getElementById('reg-name').value||'';
+  var p=document.getElementById('reg-pw')&&document.getElementById('reg-pw').value||'';
+  if(!n.trim()||!p.trim())return;
+  lsSetStr('clientName',n.trim());lsSetStr('clientPw',p.trim());
+  setState({clientName:n.trim()});
+};
+window.setMT=function(v){S.formMeal.mt=v;render()};
+window.setFull=function(v){S.formMeal.full=v;render()};
+window.setSat=function(v){S.formMeal.sat=v;render()};
+window.setMood=function(v){S.formJrn.mood=v;render()};
+window.setEnergy=function(v){S.formJrn.energy=v;render()};
+window.setEmType=function(v){S.formEm.type=v;render()};
+window.setInqCat=function(v){S.formInq.cat=v;render()};
+window.selectPlan=function(id){
+  var plan=null;
+  PLANS.forEach(function(p){if(p.id===id)plan=p});
+  setState({ppSel:S.ppSel&&S.ppSel.id===id?null:plan});
+};
+window.toggleM=function(id){S.expMeals[id]=!S.expMeals[id];render()};
+window.toggleJ=function(id){S.expJournals[id]=!S.expJournals[id];render()};
+window.toggleD=function(d){S.expDates[d]=!S.expDates[d];render()};
+window.toggleInq=function(id){S.expInq[id]=!S.expInq[id];render()};
+
+window.handlePostImg=function(e){
+  var file=e.target.files[0];if(!file)return;
+  setState({postUp:true,postPrev:URL.createObjectURL(file)});
+  uploadImg(file).then(function(url){setState({postImg:url,postUp:false})}).catch(function(){alert('Image upload failed');setState({postUp:false,postPrev:''})});
+};
+
+window.submitMeal=function(){
+  var foods=document.getElementById('f-foods')&&document.getElementById('f-foods').value||'';
+  var date=document.getElementById('f-date')&&document.getElementById('f-date').value||today();
+  var time=document.getElementById('f-time')&&document.getElementById('f-time').value||nowTime();
+  if(!foods.trim())return;
+  setState({saving:true});
+  var row={id:Date.now(),clientName:S.clientName,date:date,time:time,mealType:S.formMeal.mt,foods:foods,fullness:S.formMeal.full,satietyHours:S.formMeal.sat,emergencyType:'',feedback:'[]',isEmergency:false,timestamp:nowTs()};
+  apiCall('meals','append',{row:row}).catch(function(){}).then(function(){
+    var nm=[Object.assign({},row,{feedback:[]})].concat(S.meals);
+    lsSet('meals',nm);
+    setState({meals:nm,modal:'',saving:false,formMeal:{date:today(),time:nowTime(),mt:'Breakfast',full:'',sat:''}});
+  });
+};
+
+window.submitJournal=function(){
+  var feelings=document.getElementById('j-feel')&&document.getElementById('j-feel').value||'';
+  var notes=document.getElementById('j-notes')&&document.getElementById('j-notes').value||'';
+  var date=document.getElementById('j-date')&&document.getElementById('j-date').value||today();
+  if(!feelings.trim())return;
+  setState({saving:true});
+  var row={id:Date.now(),clientName:S.clientName,date:date,mood:S.formJrn.mood,energy:S.formJrn.energy,feelings:feelings,notes:notes,timestamp:nowTs()};
+  apiCall('journals','append',{row:row}).catch(function(){}).then(function(){
+    var nj=[row].concat(S.journals);lsSet('journals',nj);
+    setState({journals:nj,modal:'',saving:false,formJrn:{date:today(),mood:'',energy:''}});
+  });
+};
+
+window.submitEm=function(){
+  var notes=document.getElementById('e-notes')&&document.getElementById('e-notes').value||'';
+  var date=document.getElementById('e-date')&&document.getElementById('e-date').value||today();
+  var time=document.getElementById('e-time')&&document.getElementById('e-time').value||nowTime();
+  setState({saving:true});
+  var row={id:Date.now(),clientName:S.clientName,date:date,time:time,mealType:'Emergency',foods:notes||S.formEm.type,emergencyType:S.formEm.type,fullness:'',satietyHours:'',feedback:'[]',isEmergency:true,timestamp:nowTs()};
+  apiCall('meals','append',{row:row}).catch(function(){}).then(function(){
+    var nm=[Object.assign({},row,{feedback:[]})].concat(S.meals);lsSet('meals',nm);
+    setState({meals:nm,modal:'',saving:false});
+  });
+};
+
+window.submitPost=function(){
+  var title=document.getElementById('p-title')&&document.getElementById('p-title').value||'';
+  var content=document.getElementById('p-content')&&document.getElementById('p-content').value||'';
+  if(!title.trim()||!content.trim())return;
+  setState({saving:true});
+  var row={id:Date.now(),title:title,content:content,imageUrl:S.postImg||'',date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})};
+  apiCall('posts','append',{row:row}).catch(function(){}).then(function(){
+    var np=[row].concat(S.posts);lsSet('posts',np);
+    setState({posts:np,modal:'',saving:false,postImg:'',postPrev:''});
+  });
+};
+
+window.submitMtg=function(){
+  var cn=document.getElementById('m-cn')&&document.getElementById('m-cn').value||'';
+  var title=document.getElementById('m-title')&&document.getElementById('m-title').value||'';
+  var notes=document.getElementById('m-notes')&&document.getElementById('m-notes').value||'';
+  var date=document.getElementById('m-date')&&document.getElementById('m-date').value||today();
+  var time=document.getElementById('m-time')&&document.getElementById('m-time').value||'';
+  if(!title.trim()||!time)return;
+  setState({saving:true});
+  var name=S.mode==='coach'?cn:S.clientName;
+  var row={id:Date.now(),clientName:name,date:date,time:time,title:title,notes:notes};
+  apiCall('meetings','append',{row:row}).catch(function(){}).then(function(){
+    var nm=S.meetings.concat([row]).sort(function(a,b){return new Date(a.date+' '+a.time)-new Date(b.date+' '+b.time)});
+    lsSet('meetings',nm);setState({meetings:nm,modal:'',saving:false});
+  });
+};
+
+window.submitInq=function(){
+  var q=document.getElementById('inq-q')&&document.getElementById('inq-q').value||'';
+  if(!q.trim())return;
+  setState({saving:true});
+  var row={id:Date.now(),clientName:S.clientName,category:S.formInq.cat,question:q,answer:'',resolved:false,date:today(),timestamp:nowTs()};
+  apiCall('inquiries','append',{row:row}).catch(function(){}).then(function(){
+    var ni=[row].concat(S.inquiries);lsSet('inquiries',ni);
+    setState({inquiries:ni,modal:'',saving:false});
+  });
+};
+
+window.submitAnswer=function(id){
+  var text=document.getElementById('ans-txt')&&document.getElementById('ans-txt').value||S.ansText;
+  if(!text.trim())return;
+  setState({saving:true});
+  apiCall('inquiries','update',{id:id,row:{answer:text}}).catch(function(){}).then(function(){
+    var u=S.inquiries.map(function(i){return i.id==id?Object.assign({},i,{answer:text}):i});
+    lsSet('inquiries',u);setState({inquiries:u,ansId:'',ansText:'',saving:false});
+  });
+};
+
+window.toggleRes=function(id){
+  var inq=S.inquiries.find(function(i){return i.id==id});
+  var nv=!inq.resolved;
+  apiCall('inquiries','update',{id:id,row:{resolved:nv}}).catch(function(){});
+  var u=S.inquiries.map(function(i){return i.id==id?Object.assign({},i,{resolved:nv}):i});
+  lsSet('inquiries',u);setState({inquiries:u});
+};
+
+window.addFeedback=function(mealId){
+  var text=document.getElementById('fb-inp')&&document.getElementById('fb-inp').value||'';
+  if(!text.trim())return;
+  setState({saving:true});
+  var meal=S.meals.find(function(m){return m.id==mealId});
+  var fb=(meal.feedback||[]).concat([{id:Date.now(),text:text,timestamp:nowTs(),author:'Coach'}]);
+  apiCall('meals','update',{id:mealId,row:{feedback:JSON.stringify(fb)}}).catch(function(){});
+  var u=S.meals.map(function(m){return m.id==mealId?Object.assign({},m,{feedback:fb}):m});
+  lsSet('meals',u);setState({meals:u,selMeal:'',saving:false});
+};
+
+window.delMeal=function(id){apiCall('meals','delete',{id:id}).catch(function(){});var u=S.meals.filter(function(m){return m.id!=id});lsSet('meals',u);setState({meals:u})};
+window.delPost=function(id){apiCall('posts','delete',{id:id}).catch(function(){});var u=S.posts.filter(function(p){return p.id!=id});lsSet('posts',u);setState({posts:u})};
+window.delMtg=function(id){apiCall('meetings','delete',{id:id}).catch(function(){});var u=S.meetings.filter(function(m){return m.id!=id});lsSet('meetings',u);setState({meetings:u})};
+window.delInq=function(id){apiCall('inquiries','delete',{id:id}).catch(function(){});var u=S.inquiries.filter(function(i){return i.id!=id});lsSet('inquiries',u);setState({inquiries:u})};
+
+// ── Start ──
+render();
+sync();
+</script>
+</body>
+</html>
