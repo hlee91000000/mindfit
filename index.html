@@ -9,6 +9,7 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=ARllutZeJShzQMPZMOwIX7vD8CRA4g-LBq9-DnTjHi5tn4H8qrfrgkT0LX_fcDnmiT3zktRdoNM6F-B1&currency=SGD&components=buttons"></script>
   <style>
     :root { color-scheme: light; }
     @media (prefers-color-scheme: dark) {
@@ -62,6 +63,22 @@ const { useState, useEffect, useRef, useCallback } = React;
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwhfh02uDuFnpPzoLbtrFOO-lT1DvVzwrk2Zp2ZwZ8gFpejkCyfTT5-2I2h4Q2sJXU7wg/exec';
 
+const CLOUDINARY_CLOUD = 'dblqwqgnz';
+const CLOUDINARY_PRESET = 'mindfit_posts'; // Cloudinary에서 unsigned preset 이름
+
+const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await res.json();
+  if (data.secure_url) return data.secure_url;
+  throw new Error('Upload failed');
+};
+
 const apiCall = (tab, action, params = {}) => new Promise((resolve, reject) => {
   const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
   const url = new URL(SCRIPT_URL);
@@ -102,6 +119,7 @@ const I = {
   Cal:     p => <Ico {...p} d={["M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z","M16 2v4M8 2v4M3 10h18"]}/>,
   User:    p => <Ico {...p} d={["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2","M12 11a4 4 0 100-8 4 4 0 000 8z"]}/>,
   Users:   p => <Ico {...p} d={["M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2","M23 21v-2a4 4 0 00-3-3.87","M16 3.13a4 4 0 010 7.75","M9 11a4 4 0 100-8 4 4 0 000 8z"]}/>,
+  Pay:     p => <Ico {...p} d={["M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2z","M1 10h22"]}/>,,
 };
 
 // ── Modal (App 밖에 선언 → 리렌더링 안 됨) ─────────────────
@@ -344,18 +362,47 @@ const InquiryForm = ({ onClose, onSubmit, saving }) => {
 const PostForm = ({ onClose, onSubmit, saving }) => {
   const titleRef = useRef(null);
   const contentRef = useRef(null);
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState('');
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const localUrl = URL.createObjectURL(file);
+    setPreview(localUrl);
+    try {
+      const url = await uploadImage(file);
+      setImageUrl(url);
+    } catch {
+      alert('Image upload failed. Please try again.');
+      setPreview('');
+    }
+    setUploading(false);
+  };
+
   const handleSubmit = () => {
     const title = titleRef.current ? titleRef.current.value : '';
     const content = contentRef.current ? contentRef.current.value : '';
     if (!title.trim() || !content.trim()) return;
-    onSubmit({ title, content });
+    onSubmit({ title, content, imageUrl });
   };
+
   return (
     <Modal onClose={onClose} title="New Post">
       <div style={{display:'flex',flexDirection:'column',gap:14}}>
         <input ref={titleRef} placeholder="Title" className="input-field" style={{fontWeight:600,fontSize:16}}/>
-        <textarea ref={contentRef} placeholder="Write your announcement..." className="input-field" rows={8} style={{resize:'none'}}/>
-        <button onClick={handleSubmit} className="btn-primary" style={{width:'100%',padding:'15px',fontSize:16}} disabled={saving}>Publish</button>
+        <textarea ref={contentRef} placeholder="Write your announcement..." className="input-field" rows={6} style={{resize:'none'}}/>
+        <div>
+          <label style={{fontSize:13,fontWeight:600,color:'#2D9078',display:'block',marginBottom:8}}>Photo (Optional)</label>
+          <label style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'14px',background:'#E8F8F4',border:'1.5px dashed #3BAA8C',borderRadius:12,cursor:'pointer',color:'#2D9078',fontWeight:600,fontSize:14}}>
+            {uploading ? '⏳ Uploading...' : imageUrl ? '✓ Photo uploaded' : '📷 Add Photo'}
+            <input type="file" accept="image/*" onChange={handleImageChange} style={{display:'none'}}/>
+          </label>
+          {preview && <img src={preview} alt="preview" style={{width:'100%',borderRadius:12,marginTop:8,maxHeight:200,objectFit:'cover'}}/>}
+        </div>
+        <button onClick={handleSubmit} className="btn-primary" style={{width:'100%',padding:'15px',fontSize:16}} disabled={saving||uploading}>Publish</button>
       </div>
     </Modal>
   );
@@ -388,6 +435,111 @@ const MeetingForm = ({ onClose, onSubmit, saving, today, isCoach }) => {
         <button onClick={handleSubmit} className="btn-primary" style={{width:'100%',padding:'15px',fontSize:16}} disabled={saving}>Schedule</button>
       </div>
     </Modal>
+  );
+};
+
+// ── PayPal Button 컴포넌트 (App 밖) ──────────────────────────
+const PLANS = [
+  { id: 'monthly', name: 'Monthly Plan', price: '150.00', currency: 'SGD', desc: 'Full coaching support for 1 month', emoji: '🌿' },
+  { id: 'quarterly', name: '3-Month Plan', price: '400.00', currency: 'SGD', desc: 'Best value — save SGD 50', emoji: '⭐' },
+  { id: 'session', name: 'Single Session', price: '80.00', currency: 'SGD', desc: 'One-on-one coaching session', emoji: '💬' },
+];
+
+const PayPalButton = ({ plan, onSuccess }) => {
+  const containerRef = useRef(null);
+  const rendered = useRef(false);
+
+  useEffect(() => {
+    if (!containerRef.current || rendered.current) return;
+    if (!window.paypal) return;
+    rendered.current = true;
+    window.paypal.Buttons({
+      style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', height: 48 },
+      createOrder: (data, actions) => actions.order.create({
+        purchase_units: [{ amount: { value: plan.price, currency_code: plan.currency }, description: plan.name }]
+      }),
+      onApprove: async (data, actions) => {
+        const order = await actions.order.capture();
+        onSuccess(order, plan);
+      },
+      onError: (err) => { console.error('PayPal error:', err); alert('Payment failed. Please try again.'); }
+    }).render(containerRef.current);
+  }, []);
+
+  return <div ref={containerRef} style={{marginTop:12}}/>;
+};
+
+const PaymentTab = ({ clientName, mode }) => {
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [paid, setPaid] = useState(null);
+
+  const handleSuccess = (order, plan) => {
+    setPaid({ order, plan, date: new Date().toLocaleString() });
+    setSelectedPlan(null);
+  };
+
+  if (mode === 'coach') return (
+    <div>
+      <h2 style={{fontFamily:'DM Serif Display,serif',fontSize:24,color:'#1A6B58',marginBottom:8}}>Payment Plans</h2>
+      <p style={{color:'#5A9A8E',fontSize:14,marginBottom:20}}>These are the plans shown to your clients.</p>
+      {PLANS.map(plan => (
+        <div key={plan.id} className="card" style={{padding:20,marginBottom:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontSize:32}}>{plan.emoji}</span>
+            <div>
+              <p style={{fontWeight:700,color:'#1A6B58',fontSize:16}}>{plan.name}</p>
+              <p style={{color:'#3BAA8C',fontSize:20,fontWeight:700}}>SGD {plan.price}</p>
+              <p style={{color:'#5A9A8E',fontSize:13}}>{plan.desc}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (paid) return (
+    <div style={{textAlign:'center',padding:'40px 20px'}}>
+      <div style={{fontSize:64,marginBottom:16}}>🎉</div>
+      <h2 style={{fontFamily:'DM Serif Display,serif',fontSize:28,color:'#1A6B58',marginBottom:8}}>Payment Successful!</h2>
+      <p style={{color:'#5A9A8E',fontSize:15,marginBottom:8}}>{paid.plan.name} — SGD {paid.plan.price}</p>
+      <p style={{color:'#A8DDD5',fontSize:13,marginBottom:24}}>{paid.date}</p>
+      <div style={{background:'#E8F8F4',borderRadius:16,padding:20,marginBottom:24}}>
+        <p style={{color:'#2D9078',fontSize:14,lineHeight:1.7}}>🌿 Thank you for your payment! Your coach will be in touch shortly to get started on your journey.</p>
+      </div>
+      <button onClick={()=>setPaid(null)} className="btn-outline" style={{padding:'12px 24px'}}>Back to Plans</button>
+    </div>
+  );
+
+  return (
+    <div>
+      <h2 style={{fontFamily:'DM Serif Display,serif',fontSize:24,color:'#1A6B58',marginBottom:8}}>Payment</h2>
+      <p style={{color:'#5A9A8E',fontSize:14,marginBottom:20}}>Choose a plan to get started with your coaching journey.</p>
+
+      {PLANS.map(plan => (
+        <div key={plan.id} onClick={()=>setSelectedPlan(selectedPlan?.id===plan.id?null:plan)}
+          style={{background: selectedPlan?.id===plan.id?'#E8F8F4':'#fff', border: selectedPlan?.id===plan.id?'2px solid #3BAA8C':'1.5px solid #C8EDE6', borderRadius:18, padding:20, marginBottom:12, cursor:'pointer', transition:'all 0.2s'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontSize:32}}>{plan.emoji}</span>
+            <div style={{flex:1}}>
+              <p style={{fontWeight:700,color:'#1A6B58',fontSize:16}}>{plan.name}</p>
+              <p style={{color:'#3BAA8C',fontSize:20,fontWeight:700}}>SGD {plan.price}</p>
+              <p style={{color:'#5A9A8E',fontSize:13}}>{plan.desc}</p>
+            </div>
+            {selectedPlan?.id===plan.id && <span style={{color:'#3BAA8C',fontSize:20}}>✓</span>}
+          </div>
+          {selectedPlan?.id===plan.id && (
+            <div onClick={e=>e.stopPropagation()} style={{marginTop:16,borderTop:'1px solid #D4F2EB',paddingTop:16}}>
+              <p style={{color:'#5A9A8E',fontSize:13,marginBottom:12,textAlign:'center'}}>Complete your payment with PayPal</p>
+              <PayPalButton plan={plan} onSuccess={handleSuccess}/>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{background:'#F4FBFA',borderRadius:14,padding:16,marginTop:8}}>
+        <p style={{color:'#5A9A8E',fontSize:13,textAlign:'center',lineHeight:1.6}}>🔒 Secure payment via PayPal · All major cards accepted</p>
+      </div>
+    </div>
   );
 };
 
@@ -471,7 +623,7 @@ function App() {
     totalClients: clients.length,
   };
   const filteredInq = mode==='coach'?(selectedClient==='all'?inquiries:inquiries.filter(i=>i.clientName===selectedClient)):inquiries.filter(i=>i.clientName===clientName);
-  const unresolvedCount = filteredInq.filter(i=>!i.resolved).length;
+  const unresolvedCount = filteredInq.filter(i=>!i.resolved && !i.answer).length;
 
   // Handlers
   const signup = () => {
@@ -514,9 +666,9 @@ function App() {
     const nj = [row,...journals]; setJournals(nj); lsSet('journals',nj);
     setShowJrnForm(false); setSaving(false);
   };
-  const submitPost = async ({title,content}) => {
+  const submitPost = async ({title,content,imageUrl}) => {
     setSaving(true);
-    const row = {id:Date.now(),title,content,date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})};
+    const row = {id:Date.now(),title,content,imageUrl:imageUrl||'',date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})};
     try { await apiCall('posts','append',{row}); } catch{}
     const np = [row,...posts]; setPosts(np); lsSet('posts',np);
     setShowPostForm(false); setSaving(false);
@@ -574,6 +726,7 @@ function App() {
     {id:'inquiries',Icon:I.Msg,label:'Q&A'},
     {id:'posts',Icon:I.Bell,label:mode==='client'?'Notice':'Posts'},
     {id:'meetings',Icon:I.Cal,label:'Meetings'},
+    {id:'payment',Icon:I.Pay,label:'Payment'},
   ];
 
   return (
@@ -911,10 +1064,14 @@ function App() {
                   {mode==='coach'&&<button onClick={()=>deletePost(post.id)} style={{color:'#52C9A8',background:'none',border:'none',cursor:'pointer'}}><I.X size={18}/></button>}
                 </div>
                 <p style={{color:'#2D7060',lineHeight:1.7,fontSize:15,whiteSpace:'pre-line'}}>{post.content}</p>
+                {post.imageUrl && <img src={post.imageUrl} alt="post" style={{width:'100%',borderRadius:12,marginTop:12,maxHeight:300,objectFit:'cover'}}/>}
               </div>
             ))}
           </div>
         )}
+
+        {/* PAYMENT */}
+        {activeTab==='payment' && <PaymentTab clientName={clientName} mode={mode}/>}
 
         {/* MEETINGS */}
         {activeTab==='meetings' && (
