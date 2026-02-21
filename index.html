@@ -4,6 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="color-scheme" content="light"/>
+<meta name="theme-color" content="#3BAA8C"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Mindfit"/>
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Mindfit&quot;,&quot;short_name&quot;:&quot;Mindfit&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23F4FBFA&quot;,&quot;theme_color&quot;:&quot;%233BAA8C&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233BAA8C'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🌿%3C/text%3E%3C/svg%3E&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}"/>
 <title>Mindfit</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -134,7 +140,11 @@ var S={
   goals:lsObj('goals'),
   templates:lsGet('templates'),
   goalTarget:'',
-  goalForm:{meals:0,journals:0,noSpecial:false}
+  goalForm:{meals:0,journals:0,noSpecial:false},
+  calTab:'meals',
+  calYear:new Date().getFullYear(),
+  calMonth:new Date().getMonth(),
+  calFocus:'meals'
 };
 
 var _rt=null;
@@ -494,10 +504,11 @@ function buildApp(){
     {id:'journal',ic:'📔',l:'Journal'},
     {id:'stats',ic:'📊',l:mode==='coach'?'Dashboard':'Stats'},
     {id:'goals',ic:'🎯',l:'Goals'},
+    {id:'calendar',ic:'📅',l:'Calendar'},
     {id:'template',ic:'🥗',l:mode==='coach'?'Templates':'Diet Plan'},
     {id:'inquiries',ic:'💬',l:'Q&A',badge:qaBadge},
     {id:'posts',ic:'📢',l:mode==='client'?'Notice':'Posts',badge:noticeBadge},
-    {id:'meetings',ic:'📅',l:'Meetings'},
+    {id:'meetings',ic:'🗓️',l:'Meetings'},
     {id:'payment',ic:'💳',l:'Payment'}
   ];
 
@@ -1100,6 +1111,114 @@ function buildApp(){
     }
   }
 
+  // ── CALENDAR TAB ──
+  if(tab==='calendar'){
+    var cy=S.calYear, cm=S.calMonth;
+    var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var firstDay=new Date(cy,cm,1).getDay();
+    var daysInMonth=new Date(cy,cm+1,0).getDate();
+    var focusMeals=S.calFocus==='meals';
+    var calData=focusMeals?relM:relJ;
+
+    // 날짜별 데이터 집계
+    var dayMap={};
+    calData.forEach(function(item){
+      var d=item.date;
+      if(!d)return;
+      if(!dayMap[d])dayMap[d]=[];
+      dayMap[d].push(item);
+    });
+
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Calendar</h2>';
+    h+='<div style="display:flex;gap:6px">';
+    h+='<button onclick="setState({calFocus:\'meals\'})" style="padding:6px 14px;background:'+(focusMeals?'#3BAA8C':'#E8F8F4')+';color:'+(focusMeals?'white':'#2D9078')+';border-radius:10px;font-size:13px;font-weight:600">🍽️ Meals</button>';
+    h+='<button onclick="setState({calFocus:\'journal\'})" style="padding:6px 14px;background:'+(!focusMeals?'#3BAA8C':'#E8F8F4')+';color:'+(!focusMeals?'white':'#2D9078')+';border-radius:10px;font-size:13px;font-weight:600">📔 Journal</button>';
+    h+='</div></div>';
+
+    // 월 네비게이션
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
+    h+='<button onclick="prevMonth()" style="width:36px;height:36px;background:#E8F8F4;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center">‹</button>';
+    h+='<p style="font-weight:700;color:#1A6B58;font-size:17px">'+MONTHS[cm]+' '+cy+'</p>';
+    h+='<button onclick="nextMonth()" style="width:36px;height:36px;background:#E8F8F4;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center">›</button>';
+    h+='</div>';
+
+    // 요일 헤더
+    h+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">';
+    ['S','M','T','W','T','F','S'].forEach(function(d){
+      h+='<div style="text-align:center;font-size:11px;font-weight:700;color:#5A9A8E;padding:4px">'+d+'</div>';
+    });
+    h+='</div>';
+
+    // 날짜 그리드
+    h+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+    // 빈 칸
+    for(var bi=0;bi<firstDay;bi++){
+      h+='<div></div>';
+    }
+    for(var dd=1;dd<=daysInMonth;dd++){
+      var dateStr=cy+'-'+String(cm+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+      var items=dayMap[dateStr]||[];
+      var isToday=dateStr===td;
+      var hasData=items.length>0;
+      var hasSn=focusMeals&&items.some(function(m){return m.isEmergency;});
+      var bg=isToday?'#3BAA8C':hasData?'#D4F2EB':'#F4FBFA';
+      var col=isToday?'white':hasData?'#1A6B58':'#A8DDD5';
+      var border=hasSn?'2px solid #E05C5C':'2px solid transparent';
+      h+='<button onclick="showCalDay(\''+dateStr+'\',\''+S.calFocus+'\')" style="padding:6px 2px;background:'+bg+';color:'+col+';border-radius:10px;border:'+border+';text-align:center;cursor:pointer">';
+      h+='<div style="font-size:14px;font-weight:700">'+dd+'</div>';
+      if(hasData)h+='<div style="font-size:10px;font-weight:600">'+items.length+(focusMeals?' 🍽':'📔')+'</div>';
+      h+='</button>';
+    }
+    h+='</div>';
+
+    // 범례
+    h+='<div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">';
+    h+='<div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#D4F2EB;border-radius:4px"></div><span style="font-size:12px;color:#5A9A8E">Has records</span></div>';
+    h+='<div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#3BAA8C;border-radius:4px"></div><span style="font-size:12px;color:#5A9A8E">Today</span></div>';
+    if(focusMeals)h+='<div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#F4FBFA;border:2px solid #E05C5C;border-radius:4px"></div><span style="font-size:12px;color:#5A9A8E">Special note</span></div>';
+    h+='</div>';
+
+    // 선택한 날 상세 (calSelDay가 있으면)
+    if(S.calSelDay&&S.calSelFocus===S.calFocus){
+      var selItems=dayMap[S.calSelDay]||[];
+      h+='<div class="card" style="margin-top:20px;padding:20px">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
+      h+='<p style="font-weight:700;color:#1A6B58;font-size:16px">'+S.calSelDay+'</p>';
+      h+='<button onclick="setState({calSelDay:\'\'})" style="color:#52C9A8;font-size:20px">&#x2715;</button></div>';
+      if(selItems.length===0){
+        h+='<p style="color:#5A9A8E;text-align:center;padding:16px">No records</p>';
+      }else{
+        selItems.forEach(function(item){
+          if(focusMeals){
+            h+='<div style="border-bottom:1px solid #E8F8F4;padding:10px 0">';
+            if(item.isEmergency)h+='<span class="ts" style="font-size:11px;margin-bottom:4px;display:inline-block">Special</span>';
+            else h+='<span class="td" style="font-size:11px;margin-bottom:4px;display:inline-block">'+esc(item.mealType)+'</span>';
+            h+=' <span style="color:#5A9A8E;font-size:13px">'+esc(item.time)+'</span>';
+            h+='<p style="color:#2D7060;font-size:14px;margin-top:4px;line-height:1.5">'+esc(item.foods)+'</p>';
+            var FL3=['','Still hungry','A little full','Just right','Pretty full','Very full'];
+            if(item.fullness)h+='<span style="font-size:12px;color:#3BAA8C;font-weight:600">'+esc(FL3[item.fullness]||'')+(item.satietyHours?' · '+esc(item.satietyHours):'')+'</span>';
+            var rxns3=item.reactions||{};
+            var rKeys=Object.keys(rxns3).filter(function(k){return rxns3[k];});
+            if(rKeys.length>0)h+='<div style="margin-top:6px">'+rKeys.map(function(e){return'<span style="font-size:13px">'+e+'</span>';}).join(' ')+'</div>';
+            (item.feedback||[]).forEach(function(fb){h+='<p style="color:#3BAA8C;font-size:13px;margin-top:6px">💬 '+esc(fb.text)+'</p>';});
+            h+='</div>';
+          }else{
+            h+='<div style="border-bottom:1px solid #E8F8F4;padding:10px 0">';
+            h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">';
+            if(item.mood)h+='<span style="font-size:22px">'+esc(item.mood)+'</span>';
+            if(item.energy)h+='<span style="font-size:13px;font-weight:700;color:#3BAA8C">Energy: '+esc(item.energy)+'/5</span>';
+            h+='</div>';
+            if(item.feelings)h+='<p style="color:#2D7060;font-size:14px;line-height:1.5">'+esc(item.feelings)+'</p>';
+            (item.jfeedback||[]).forEach(function(fb){h+='<p style="color:#3BAA8C;font-size:13px;margin-top:6px">💬 '+esc(fb.text)+'</p>';});
+            h+='</div>';
+          }
+        });
+      }
+      h+='</div>';
+    }
+  }
+
   // ── PAYMENT TAB ──
   if(tab==='payment'){
     if(mode==='coach'){
@@ -1189,6 +1308,16 @@ function buildMealCard(meal,mode){
         h+='<button onclick="setState({selMeal:\''+meal.id+'\'})" style="color:#3BAA8C;font-weight:600;font-size:14px;padding-top:12px;border-top:1px solid #D4F2EB;width:100%;text-align:left;background:none;border:none;cursor:pointer">+ Add Feedback</button>';
       }
     }
+
+      // 리액션
+      var rxns=meal.reactions||{};
+      var rxnList=[['⭐','Great!'],['👍','Good job'],['💚','Healthy'],['💪','Keep it up!']];
+      h+='<div style="display:flex;gap:6px;padding-top:10px;flex-wrap:wrap">';
+      rxnList.forEach(function(r){
+        var active=rxns[r[0]];
+        h+='<button onclick="toggleReaction(\''+meal.id+'\',\''+r[0]+'\')" style="padding:5px 12px;background:'+(active?'#3BAA8C':'#E8F8F4')+';color:'+(active?'white':'#2D9078')+';border-radius:20px;font-size:13px;font-weight:600">'+r[0]+' '+r[1]+'</button>';
+      });
+      h+='</div>';
     h+='</div>';
   }
   return h+'</div>';
@@ -1506,8 +1635,64 @@ window.delTemplate=function(id){
   setState({templates:tpls});
 };
 
+// ── Reaction ──
+window.toggleReaction=function(mealId,emoji){
+  var meal=null;
+  S.meals.forEach(function(m){if(m.id==mealId)meal=m;});
+  if(!meal)return;
+  var rxns=Object.assign({},meal.reactions||{});
+  rxns[emoji]=!rxns[emoji];
+  var u=S.meals.map(function(m){return m.id==mealId?Object.assign({},m,{reactions:rxns}):m;});
+  lsSet('meals',u);
+  apiCall('meals','update',{id:mealId,row:{reactions:JSON.stringify(rxns)}}).catch(function(){});
+  setState({meals:u});
+};
+
+// ── Calendar ──
+window.prevMonth=function(){
+  var m=S.calMonth-1, y=S.calYear;
+  if(m<0){m=11;y--;}
+  setState({calMonth:m,calYear:y,calSelDay:''});
+};
+window.nextMonth=function(){
+  var m=S.calMonth+1, y=S.calYear;
+  if(m>11){m=0;y++;}
+  setState({calMonth:m,calYear:y,calSelDay:''});
+};
+window.showCalDay=function(date,focus){
+  setState({calSelDay:S.calSelDay===date?'':date,calSelFocus:focus});
+};
+
 render();
 sync();
+
+// ── PWA Service Worker ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    var sw=[
+      'var CACHE="mindfit-v1";',
+      'self.addEventListener("install",function(e){',
+      '  e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(["./"]);}));',
+      '});',
+      'self.addEventListener("fetch",function(e){',
+      '  e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}));',
+      '});'
+    ].join('\n');
+    var blob=new Blob([sw],{type:'application/javascript'});
+    var url=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url).catch(function(){});
+  });
+}
+
+// PWA Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    var swCode = 'self.addEventListener("install",function(e){e.waitUntil(caches.open("mindfit-v1").then(function(c){return c.addAll(["./"])}))});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';
+    var blob = new Blob([swCode], {type:'application/javascript'});
+    var swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(function(){});
+  });
+}
 
 </script>
 </body>
