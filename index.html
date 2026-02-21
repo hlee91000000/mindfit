@@ -145,7 +145,9 @@ var S={
   calYear:new Date().getFullYear(),
   calMonth:new Date().getMonth(),
   calFocus:'meals',
-  tplImg:'',tplPrev:'',tplUp:false
+  tplImg:'',tplPrev:'',tplUp:false,
+  dashClient:'',dashTab:'meals',
+  authTab:'login'
 };
 
 var _rt=null;
@@ -221,7 +223,16 @@ function buildModal(){
   if(!S.modal)return '';
   var h='<div class="ov" onclick="closeModal()"><div class="sh" onclick="event.stopPropagation()"><div class="hdl"></div>';
 
-  if(S.modal==='coach'){
+  if(S.modal==='logout'){
+    h+='<div style="text-align:center;padding:10px 0">';
+    h+='<p style="font-size:48px;margin-bottom:16px">👋</p>';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:10px">Log out?</h2>';
+    h+='<p style="color:#5A9A8E;font-size:15px;margin-bottom:28px">You can log back in anytime.</p>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+    h+='<button onclick="closeModal()" class="bo" style="padding:14px">Cancel</button>';
+    h+='<button onclick="confirmLogout()" class="bp" style="padding:14px">Log Out</button>';
+    h+='</div></div>';
+  }else if(S.modal==='coach'){
     h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:8px">Coach Access</h2>';
     h+='<p style="color:#5A9A8E;margin-bottom:24px">Enter your password</p>';
     h+='<input id="m-cpw" type="password" class="inp" placeholder="Password" style="margin-bottom:16px"/>';
@@ -230,12 +241,14 @@ function buildModal(){
     h+='<button class="bo" style="padding:14px" onclick="closeModal()">Cancel</button></div>';
 
   }else if(S.modal==='changePw'){
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:8px">Verify Identity</h2>';
-    h+='<p style="color:#5A9A8E;margin-bottom:24px">Enter password to change name</p>';
-    h+='<input id="m-cpw2" type="password" class="inp" placeholder="Your Password" style="margin-bottom:16px"/>';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2D9078;margin-bottom:8px">Change Name</h2>';
+    h+='<p style="color:#5A9A8E;margin-bottom:20px">Enter your new name and current password</p>';
+    h+='<div style="display:flex;flex-direction:column;gap:12px">';
+    h+='<input id="m-newname" class="inp" placeholder="New name" value="'+esc(S.clientName)+'"/>';
+    h+='<input id="m-cpw2" type="password" class="inp" placeholder="Current password"/>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
-    h+='<button class="bp" style="padding:14px" onclick="verifyChange()">Verify</button>';
-    h+='<button class="bo" style="padding:14px" onclick="closeModal()">Cancel</button></div>';
+    h+='<button class="bp" style="padding:14px" onclick="verifyChange()">Confirm</button>';
+    h+='<button class="bo" style="padding:14px" onclick="closeModal()">Cancel</button></div></div>';
 
   }else if(S.modal==='meal'){
     var fm=S.formMeal;
@@ -510,6 +523,7 @@ function buildApp(){
     {id:'progress',ic:'📝',l:'Feedback'},
     {id:'goals',ic:'🎯',l:'Goals'},
     {id:'template',ic:'🥗',l:mode==='coach'?'Templates':'Diet Plan'},
+    {id:'dashboard',ic:'🏠',l:'Dashboard',coachOnly:true},
     {id:'inquiries',ic:'💬',l:'Q&A',badge:qaBadge},
     {id:'posts',ic:'📢',l:mode==='client'?'Notice':'Posts',badge:noticeBadge},
     {id:'meetings',ic:'🗓️',l:'Meetings'},
@@ -553,11 +567,12 @@ function buildApp(){
     h+='<div style="display:flex;align-items:center;gap:8px">';
     h+='<div style="width:32px;height:32px;background:rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px">'+esc(cn.charAt(0).toUpperCase())+'</div>';
     h+='<span style="color:#fff;font-weight:600;font-size:15px">'+esc(cn)+'</span></div>';
-    h+='<button onclick="openModal(\'changePw\')" style="color:#fff;font-size:13px;font-weight:600">Change</button></div>';
+    h+='<button onclick="doLogout()" style="color:rgba(255,255,255,0.8);font-size:13px;font-weight:600;background:rgba(255,255,255,0.15);padding:6px 14px;border-radius:20px">Logout</button></div>';
   }
 
   h+='<div style="display:flex;overflow-x:auto">';
   TABS.forEach(function(t){
+    if(t.coachOnly&&mode!=='coach')return;
     var badge='';
     if(t.badge>0)badge='<span class="bdg">'+t.badge+'</span>';
     h+='<button onclick="switchTab(\''+t.id+'\')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px 14px;background:none;border:none;border-bottom:'+(tab===t.id?'2.5px solid #fff':'2.5px solid transparent')+';color:'+(tab===t.id?'#fff':'rgba(255,255,255,0.55)')+';cursor:pointer;white-space:nowrap;min-width:56px">';
@@ -1275,6 +1290,169 @@ function buildApp(){
   }
 
 
+  // ── DASHBOARD TAB (코치 전용) ──
+  if(tab==='dashboard'&&mode==='coach'){
+    var dc=S.dashClient, dt=S.dashTab;
+
+    if(!dc){
+      // 회원 목록 화면
+      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:6px">Dashboard</h2>';
+      h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:20px">Select a client to view their records</p>';
+      if(clients.length===0){
+        h+='<div class="card" style="padding:40px;text-align:center">';
+        h+='<p style="font-size:36px;margin-bottom:12px">👥</p>';
+        h+='<p style="color:#5A9A8E;font-weight:600">No clients yet</p></div>';
+      }else{
+        var wk7d=new Date();wk7d.setDate(wk7d.getDate()-7);
+        clients.forEach(function(c){
+          var cm=meals.filter(function(m){return m.clientName===c;});
+          var cj=journals.filter(function(j){return j.clientName===c;});
+          var wkM=cm.filter(function(m){return!m.isEmergency&&new Date(m.date)>=wk7d;}).length;
+          var lastM=cm.length>0?cm[0].date:'';
+          var hasPending=inquiries.filter(function(i){return i.clientName===c&&!i.answer;}).length;
+          var cct=S.contracts[c];
+          var daysLeft=cct&&cct.end?Math.round((new Date(cct.end)-new Date(td))/(1000*60*60*24)):null;
+          h+='<button onclick="setState({dashClient:\''+esc(c)+'\',dashTab:\'meals\'})" style="width:100%;text-align:left;background:#fff;border:1.5px solid #C8EDE6;border-radius:18px;padding:18px 20px;margin-bottom:10px;cursor:pointer">';
+          h+='<div style="display:flex;align-items:center;gap:12px">';
+          h+='<div style="width:44px;height:44px;background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;flex-shrink:0">'+esc(c.charAt(0).toUpperCase())+'</div>';
+          h+='<div style="flex:1">';
+          h+='<p style="font-weight:700;color:#1A6B58;font-size:16px;margin-bottom:4px">'+esc(c)+'</p>';
+          h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+          h+='<span style="font-size:12px;color:#5A9A8E">🍽️ '+wkM+'/wk</span>';
+          h+='<span style="font-size:12px;color:#5A9A8E">📔 '+cj.length+' journals</span>';
+          if(lastM)h+='<span style="font-size:12px;color:#5A9A8E">Last: '+esc(lastM)+'</span>';
+          h+='</div></div>';
+          h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">';
+          if(hasPending>0)h+='<span style="background:#E05C5C;color:white;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700">'+hasPending+' Q</span>';
+          if(daysLeft!==null)h+='<span style="font-size:11px;font-weight:600;color:'+(daysLeft<7?'#E05C5C':'#3BAA8C')+'">'+(daysLeft>0?daysLeft+'d left':'Expired')+'</span>';
+          h+='<span style="color:#52C9A8;font-size:18px">›</span>';
+          h+='</div></div></button>';
+        });
+      }
+    }else{
+      // 회원 상세 화면
+      var dcMeals=meals.filter(function(m){return m.clientName===dc;}).sort(function(a,b){return new Date(b.date+' '+b.time)-new Date(a.date+' '+a.time);});
+      var dcJrnls=journals.filter(function(j){return j.clientName===dc;});
+
+      // 헤더
+      h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">';
+      h+='<button onclick="setState({dashClient:\'\'})" style="width:36px;height:36px;background:#E8F8F4;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0">‹</button>';
+      h+='<div style="width:40px;height:40px;background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0">'+esc(dc.charAt(0).toUpperCase())+'</div>';
+      h+='<div><p style="font-weight:700;color:#1A6B58;font-size:18px">'+esc(dc)+'</p>';
+      h+='<p style="color:#5A9A8E;font-size:12px">'+dcMeals.length+' meals · '+dcJrnls.length+' journals</p></div></div>';
+
+      // 서브탭
+      h+='<div style="display:flex;gap:8px;margin-bottom:20px">';
+      [{id:'meals',l:'🍽️ Meals'},{id:'journal',l:'📔 Journal'}].forEach(function(t){
+        var sel=dt===t.id;
+        h+='<button onclick="setState({dashTab:\''+t.id+'\'})" style="padding:10px 18px;background:'+(sel?'#3BAA8C':'#E8F8F4')+';color:'+(sel?'white':'#2D9078')+';border-radius:14px;font-weight:600;font-size:14px;cursor:pointer">'+t.l+'</button>';
+      });
+      h+='</div>';
+
+      if(dt==='meals'){
+        if(dcMeals.length===0){
+          h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600">No meals yet</p></div>';
+        }else{
+          // 날짜별 그룹
+          var dcByDate={};
+          dcMeals.forEach(function(m){if(!dcByDate[m.date])dcByDate[m.date]=[];dcByDate[m.date].push(m);});
+          var dcDates=Object.keys(dcByDate).sort(function(a,b){return new Date(b)-new Date(a);});
+          dcDates.forEach(function(date){
+            var dm=dcByDate[date];
+            var exp=S.expDates['dash_'+date];
+            h+='<div class="cw" style="margin-bottom:8px;overflow:hidden">';
+            h+='<button onclick="toggleDash(\''+date+'\')" style="width:100%;padding:13px 18px;display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;text-align:left">';
+            h+='<div style="flex:1;display:flex;align-items:center;gap:8px">';
+            h+='<span style="font-weight:700;color:#1A6B58;font-size:15px">'+esc(date)+'</span>';
+            if(date===td)h+='<span class="td" style="font-size:11px">Today</span>';
+            h+='<span style="color:#5A9A8E;font-size:12px">'+dm.length+' meals</span></div>';
+            h+='<span style="color:#52C9A8">'+(exp?'&#9650;':'&#9660;')+'</span></button>';
+            if(exp){
+              h+='<div style="border-top:1px solid #D4F2EB">';
+              dm.forEach(function(meal,i){
+                var fbs=meal.feedback||[];
+                var rxns=meal.reactions||{};
+                var rKeys=Object.keys(rxns).filter(function(k){return rxns[k];});
+                h+='<div style="padding:14px 18px;'+(i<dm.length-1?'border-bottom:1px solid #EEF8F5':'')+'">';
+                h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+                if(meal.isEmergency)h+='<span class="ts" style="font-size:11px">Special</span>';
+                else h+='<span class="td" style="font-size:11px">'+esc(meal.mealType)+'</span>';
+                h+='<span style="color:#5A9A8E;font-size:12px">'+esc(meal.time)+'</span></div>';
+                h+='<p style="color:#2D7060;font-size:14px;line-height:1.5;margin-bottom:8px">'+esc(meal.foods)+'</p>';
+                if(meal.fullness){var FL5=['','Still hungry','A little full','Just right','Pretty full','Very full'];h+='<p style="font-size:12px;color:#5A9A8E;margin-bottom:8px">'+esc(FL5[meal.fullness]||'')+(meal.satietyHours?' · '+esc(meal.satietyHours):'')+'</p>';}
+                // 리액션 버튼
+                var rxnList2=[['⭐','Great!'],['👍','Good job'],['💚','Healthy'],['💪','Keep it up!']];
+                h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+                rxnList2.forEach(function(r){
+                  var active=rxns[r[0]];
+                  h+='<button onclick="toggleReaction(\''+meal.id+'\',\''+r[0]+'\')" style="padding:4px 10px;background:'+(active?'#3BAA8C':'#E8F8F4')+';color:'+(active?'white':'#2D9078')+';border-radius:20px;font-size:12px;font-weight:600">'+r[0]+' '+r[1]+'</button>';
+                });
+                h+='</div>';
+                fbs.forEach(function(fb){
+                  h+='<div style="background:#E8F8F4;border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+                  h+='<p style="font-size:11px;font-weight:700;color:#3BAA8C;margin-bottom:2px">Coach · '+esc(fb.timestamp)+'</p>';
+                  h+='<p style="color:#2D7060;font-size:13px">'+esc(fb.text)+'</p></div>';
+                });
+                if(S.selMeal==meal.id){
+                  h+='<div style="display:flex;gap:6px;margin-top:6px">';
+                  h+='<input id="fb-inp" class="inp" placeholder="Write feedback..." style="flex:1;font-size:14px"/>';
+                  h+='<button onclick="addFeedback(\''+meal.id+'\')" class="bs" style="padding:10px 14px">Send</button>';
+                  h+='<button onclick="setState({selMeal:\'\'})" style="color:#52C9A8;padding:10px;font-size:18px">&#x2715;</button></div>';
+                }else{
+                  h+='<button onclick="setState({selMeal:\''+meal.id+'\'})" style="color:#3BAA8C;font-size:13px;font-weight:600;background:none;border:none;cursor:pointer;margin-top:4px">+ Feedback</button>';
+                }
+                h+='</div>';
+              });
+              h+='</div>';
+            }
+            h+='</div>';
+          });
+        }
+      }
+
+      if(dt==='journal'){
+        if(dcJrnls.length===0){
+          h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600">No journals yet</p></div>';
+        }else{
+          dcJrnls.forEach(function(jrn){
+            var exp2=S.expJournals[jrn.id];
+            var jfbs=jrn.jfeedback||[];
+            h+='<div class="cw" style="margin-bottom:8px;overflow:hidden">';
+            h+='<button onclick="toggleJ(\''+jrn.id+'\')" style="width:100%;padding:13px 18px;display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;text-align:left">';
+            h+='<span style="font-size:26px">'+(jrn.mood||'📔')+'</span>';
+            h+='<div style="flex:1">';
+            h+='<p style="font-weight:700;color:#1A6B58;font-size:15px">'+esc(jrn.date)+'</p>';
+            if(jrn.energy)h+='<p style="color:#5A9A8E;font-size:12px">Energy: '+esc(jrn.energy)+'/5</p>';
+            h+='</div>';
+            if(jfbs.length>0)h+='<span style="font-size:12px;color:#3BAA8C;font-weight:600">'+jfbs.length+' comments</span>';
+            h+='<span style="color:#52C9A8">'+(exp2?'&#9650;':'&#9660;')+'</span></button>';
+            if(exp2){
+              h+='<div style="padding:0 18px 16px;border-top:1px solid #D4F2EB">';
+              if(jrn.feelings)h+='<p style="color:#2D7060;font-size:14px;line-height:1.6;margin-top:12px;margin-bottom:10px">'+esc(jrn.feelings)+'</p>';
+              if(jrn.notes)h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:10px">'+esc(jrn.notes)+'</p>';
+              jfbs.forEach(function(fb){
+                h+='<div style="background:#E8F8F4;border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+                h+='<p style="font-size:11px;font-weight:700;color:#3BAA8C;margin-bottom:2px">'+esc(fb.author)+' · '+esc(fb.timestamp)+'</p>';
+                h+='<p style="color:#2D7060;font-size:13px">'+esc(fb.text)+'</p></div>';
+              });
+              if(S.selJrn==jrn.id){
+                h+='<div style="display:flex;gap:6px;margin-top:8px">';
+                h+='<input id="jfb-inp" class="inp" placeholder="Write a comment..." style="flex:1;font-size:14px"/>';
+                h+='<button onclick="addJournalFeedback(\''+jrn.id+'\')" class="bs" style="padding:10px 14px">Send</button>';
+                h+='<button onclick="setState({selJrn:\'\'})" style="color:#52C9A8;padding:10px;font-size:18px">&#x2715;</button></div>';
+              }else{
+                h+='<button onclick="setState({selJrn:\''+jrn.id+'\'})" style="color:#52C9A8;font-size:13px;font-weight:600;background:none;border:none;cursor:pointer;margin-top:6px">+ Comment</button>';
+              }
+              h+='</div>';
+            }
+            h+='</div>';
+          });
+        }
+      }
+    }
+  }
+
+
   // ── PAYMENT TAB ──
   if(tab==='payment'){
     if(mode==='coach'){
@@ -1480,15 +1658,55 @@ window.verifyCoach=function(){
 };
 window.verifyChange=function(){
   var pw=(document.getElementById('m-cpw2')&&document.getElementById('m-cpw2').value)||'';
-  if(pw===lsStr('clientPw')){lsRm('clientName');lsRm('clientPw');setState({clientName:'',modal:''});}
-  else alert('Incorrect password');
+  var newName=(document.getElementById('m-newname')&&document.getElementById('m-newname').value.trim())||'';
+  if(!newName)return alert('Please enter a new name.');
+  if(pw===lsStr('clientPw')){
+    lsSetStr('clientName',newName);
+    setState({clientName:newName,modal:''});
+  }else{
+    alert('Incorrect password');
+  }
+};
+window.doLogin=function(){
+  var n=(document.getElementById('reg-name')&&document.getElementById('reg-name').value.trim())||'';
+  var p=(document.getElementById('reg-pw')&&document.getElementById('reg-pw').value)||'';
+  if(!n||!p)return alert('Please enter your name and password.');
+  var savedPw=localStorage.getItem('mindfit_clientPw_'+n);
+  if(!savedPw){
+    // 구버전 호환: clientName/clientPw
+    var oldName=lsStr('clientName'), oldPw=lsStr('clientPw');
+    if(oldName===n&&oldPw===p){
+      lsSetStr('clientName',n);
+      setState({clientName:n,tmpName:'',tmpPw:''});
+    }else{
+      alert('Name or password is incorrect.');
+    }
+    return;
+  }
+  if(savedPw===p){
+    lsSetStr('clientName',n);
+    setState({clientName:n,tmpName:'',tmpPw:''});
+  }else{
+    alert('Incorrect password.');
+  }
+};
+window.confirmLogout=function(){
+  lsRm('clientName');
+  setState({clientName:'',tab:'meals',modal:'',authTab:'login',tmpName:'',tmpPw:''});
+};
+
+window.doLogout=function(){
+  setState({modal:'logout'});
 };
 window.signup=function(){
   var n=(document.getElementById('reg-name')&&document.getElementById('reg-name').value)||S.tmpName||'';
   var p=(document.getElementById('reg-pw')&&document.getElementById('reg-pw').value)||S.tmpPw||'';
   if(!n.trim()||!p.trim())return alert('Please enter your name and password.');
-  lsSetStr('clientName',n.trim());lsSetStr('clientPw',p.trim());
-  setState({clientName:n.trim(),tmpName:'',tmpPw:''});
+  var name=n.trim(), pw=p.trim();
+  // 이름별 비밀번호 저장 (로그인 지원)
+  localStorage.setItem('mindfit_clientPw_'+name, pw);
+  lsSetStr('clientName',name);lsSetStr('clientPw',pw);
+  setState({clientName:name,tmpName:'',tmpPw:'',authTab:'login'});
 };
 window.setMT=function(v){S.formMeal.mt=v;render();};
 window.setFull=function(v){S.formMeal.full=v;render();};
@@ -1706,6 +1924,11 @@ window.delTemplate=function(id){
 };
 
 // ── Reaction ──
+window.toggleDash=function(date){
+  var exp=Object.assign({},S.expDates);
+  exp['dash_'+date]=!exp['dash_'+date];
+  setState({expDates:exp});
+};
 window.toggleReaction=function(mealId,emoji){
   var meal=null;
   S.meals.forEach(function(m){if(m.id==mealId)meal=m;});
