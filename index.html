@@ -109,12 +109,14 @@ function authSubmit(){
     // 기존 방식 호환 (clientPw로 저장된 구버전)
     if(!savedPw){
       var oldPw=localStorage.getItem('clientPw');
-      var oldName=localStorage.getItem('clientName');
-      if(oldPw&&p===oldPw){
+      var oldName=(localStorage.getItem('clientName')||'').trim();
+      if(oldPw&&oldName===n&&p===oldPw){
         // 새 키로 마이그레이션
         localStorage.setItem('mf_pw_'+n,oldPw);
         localStorage.setItem('mf_approved_'+n,'1');
         savedPw=oldPw;
+      }else if(oldPw&&oldName!==n){
+        alert('Name not found. Did you mean "'+oldName+'"?');return;
       }else{
         alert('No account found. Please sign up first.');return;
       }
