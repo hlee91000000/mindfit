@@ -144,7 +144,8 @@ var S={
   calTab:'meals',
   calYear:new Date().getFullYear(),
   calMonth:new Date().getMonth(),
-  calFocus:'meals'
+  calFocus:'meals',
+  tplImg:'',tplPrev:'',tplUp:false
 };
 
 var _rt=null;
@@ -425,7 +426,11 @@ function buildModal(){
     h+='</select></div>';
     h+='<div><label style="font-size:13px;font-weight:600;color:#2D9078;display:block;margin-bottom:6px">Template Content</label>';
     h+='<textarea id="tpl-content" class="inp" rows="12" style="resize:none;font-family:monospace;font-size:13px;line-height:1.7" placeholder="Breakfast:&#10;- Oatmeal with berries&#10;- 1 boiled egg&#10;&#10;Lunch:&#10;- Brown rice + grilled chicken&#10;- Side salad&#10;&#10;Dinner:&#10;- Clear soup + steamed veggies&#10;&#10;Snacks:&#10;- Apple / handful of nuts"></textarea></div>';
-    h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="saveTemplate()">Publish</button></div>';
+    h+='<label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#E8F8F4;border:1.5px dashed #3BAA8C;border-radius:12px;cursor:pointer;color:#2D9078;font-weight:600;font-size:14px">';
+    h+=(S.tplUp?'Uploading...':(S.tplImg?'📷 Photo uploaded':'📷 Add Photo'));
+    h+='<input type="file" accept="image/*" onchange="handleTplImg(event)" style="display:none"/></label>';
+    if(S.tplPrev)h+='<img src="'+esc(S.tplPrev)+'" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover"/>';
+    h+='<button class="bp" style="width:100%;padding:15px;font-size:16px" onclick="saveTemplate()"'+(S.tplUp?' disabled':'')+'>Publish</button></div>';
 
   }else if(S.modal==='welcomeMsg'){
     var wmClients=[];
@@ -502,9 +507,8 @@ function buildApp(){
   var TABS=[
     {id:'meals',ic:'🍽️',l:'Meals'},
     {id:'journal',ic:'📔',l:'Journal'},
-    {id:'stats',ic:'📊',l:mode==='coach'?'Dashboard':'Stats'},
+    {id:'progress',ic:'📝',l:'Feedback'},
     {id:'goals',ic:'🎯',l:'Goals'},
-    {id:'calendar',ic:'📅',l:'Calendar'},
     {id:'template',ic:'🥗',l:mode==='coach'?'Templates':'Diet Plan'},
     {id:'inquiries',ic:'💬',l:'Q&A',badge:qaBadge},
     {id:'posts',ic:'📢',l:mode==='client'?'Notice':'Posts',badge:noticeBadge},
@@ -611,7 +615,10 @@ function buildApp(){
 
   // ── JOURNAL TAB ──
   if(tab==='journal'){
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:20px">Journal</h2>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Journal</h2>';
+    if(mode==='client'&&cn)h+='<button onclick="openModal(\'journal\')" class="bp" style="padding:10px 18px;font-size:14px">+ Add</button>';
+    h+='</div>';
     if(relJ.length===0){
       h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600;font-size:16px">No journal entries yet</p></div>';
     }else{
@@ -657,260 +664,129 @@ function buildApp(){
   }
 
   // ── STATS / DASHBOARD TAB ──
-  if(tab==='stats'){
+  if(tab==='progress'){
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:6px">Feedback</h2>';
     if(mode==='coach'){
-      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:6px">Dashboard</h2>';
-      h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:20px">'+(sc==='all'?'All clients overview':'Overview for '+esc(sc))+'</p>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">';
-      h+='<div class="st" style="grid-column:span 2;background:linear-gradient(135deg,#3BAA8C,#52C9A8);color:white">';
-      h+='<p style="font-size:40px;font-weight:700;font-family:\'DM Serif Display\',serif">'+stats.tc+'</p>';
-      h+='<p style="opacity:.85;font-size:13px;margin-top:4px;font-weight:600">Total Clients</p></div>';
-      [{v:stats.wm,l:'Meals This Week',i:'🍽️'},{v:stats.sn,l:'Special Notes',i:'📋'},{v:stats.je,l:'Journal Entries',i:'📔'},{v:stats.wf,l:'With Feedback',i:'💬'}].forEach(function(s){
-        h+='<div class="st"><p style="font-size:13px;margin-bottom:8px">'+s.i+'</p>';
-        h+='<p style="font-size:32px;font-weight:700;color:#1A6B58;font-family:\'DM Serif Display\',serif">'+s.v+'</p>';
-        h+='<p style="color:#4A8A7E;font-size:13px;font-weight:600;margin-top:4px">'+s.l+'</p></div>';
-      });
-      h+='</div>';
-      if(sc==='all'&&clients.length>0){
-        h+='<h3 style="font-weight:700;color:#1A6B58;font-size:17px;margin-bottom:14px">Client Overview</h3>';
-        clients.forEach(function(c){
-          var cm=meals.filter(function(m){return m.clientName===c;});
-          var cj=journals.filter(function(j){return j.clientName===c;});
-          var ci=inquiries.filter(function(i){return i.clientName===c&&!i.resolved&&!i.answer;});
-          var cct=S.contracts[c];
-          var wkM=cm.filter(function(m){return new Date(m.date)>=wk&&!m.isEmergency;}).length;
-          var lastMeal=cm.length>0?cm[0].date:'No meals yet';
-          h+='<div class="card" style="padding:18px;margin-bottom:10px">';
-          h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-          h+='<div style="width:40px;height:40px;background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px">'+esc(c.charAt(0).toUpperCase())+'</div>';
-          h+='<div style="flex:1"><p style="font-weight:700;color:#1A6B58;font-size:16px">'+esc(c)+'</p>';
-          if(cct&&cct.end){
-            var dl=Math.round((new Date(cct.end)-new Date(td))/(1000*60*60*24));
-            h+='<p style="font-size:12px;color:'+(dl<7?'#E05C5C':'#5A9A8E')+'">'+(dl>0?dl+' days left':'Expired')+'</p>';
-          }
-          h+='</div>';
-          if(ci.length>0)h+='<span style="background:#E05C5C;color:white;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">'+ci.length+' Q</span>';
-          h+='</div>';
-          h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
-          h+='<div style="background:#F4FBFA;border-radius:10px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#1A6B58">'+wkM+'</p><p style="font-size:11px;color:#5A9A8E;font-weight:600">Meals/wk</p></div>';
-          h+='<div style="background:#F4FBFA;border-radius:10px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#1A6B58">'+cj.length+'</p><p style="font-size:11px;color:#5A9A8E;font-weight:600">Journals</p></div>';
-          h+='<div style="background:#F4FBFA;border-radius:10px;padding:10px;text-align:center"><p style="font-size:11px;color:#3BAA8C;font-weight:600">Last meal</p><p style="font-size:11px;color:#5A9A8E">'+esc(lastMeal)+'</p></div>';
-          h+='</div></div>';
-        });
-      }
-    }else{
-      h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:20px">Progress</h2>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">';
-      [{v:stats.wm,l:'Meals This Week',i:'🍽️'},{v:stats.sn,l:'Special Notes',i:'📋'},{v:stats.je,l:'Journal Entries',i:'📔'},{v:stats.wf,l:'With Feedback',i:'💬'}].forEach(function(s){
-        h+='<div class="st"><p style="font-size:13px;margin-bottom:8px">'+s.i+'</p>';
-        h+='<p style="font-size:32px;font-weight:700;color:#1A6B58;font-family:\'DM Serif Display\',serif">'+s.v+'</p>';
-        h+='<p style="color:#4A8A7E;font-size:13px;font-weight:600;margin-top:4px">'+s.l+'</p></div>';
-      });
-      h+='</div>';
-      h+='<h3 style="font-weight:700;color:#1A6B58;font-size:17px;margin-bottom:14px">All Records</h3>';
-      if(sortedDates.length===0){
+      h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:20px">'+(sc==='all'?'All clients':'Viewing: '+esc(sc))+'</p>';
+      // 식사 기록 접기형식
+      var fbMeals=sc==='all'?meals:meals.filter(function(m){return m.clientName===sc;});
+      // 날짜별로 묶기
+      var fbByDate={};
+      fbMeals.forEach(function(m){if(!fbByDate[m.date])fbByDate[m.date]={meals:[],journals:[]};fbByDate[m.date].meals.push(m);});
+
+      var fbDates=Object.keys(fbByDate).sort(function(a,b){return new Date(b)-new Date(a);});
+      if(fbDates.length===0){
         h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600">No records yet</p></div>';
       }else{
-        sortedDates.forEach(function(date){
-          var dm=byDate[date];var exp=S.expDates[date];
-          h+='<div class="cw" style="margin-bottom:10px;overflow:hidden">';
-          h+='<button onclick="toggleD(\''+date+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;cursor:pointer">';
+        fbDates.forEach(function(date){
+          var dayData=fbByDate[date];
+          var exp=S.expDates[date];
+          var totalItems=dayData.meals.length;
+          var hasFb=dayData.meals.some(function(m){return(m.feedback||[]).length>0;});
+          h+='<div class="cw" style="margin-bottom:8px;overflow:hidden">';
+          h+='<button onclick="toggleD(\''+date+'\')" style="width:100%;padding:13px 18px;display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;text-align:left">';
           h+='<div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
           h+='<span style="font-weight:700;color:#1A6B58;font-size:15px">'+esc(date)+'</span>';
-          h+='<span style="color:#4A8A7E;font-size:13px;font-weight:600">'+dm.length+' meals</span>';
-          if(date===td)h+='<span class="td" style="font-size:11px">Today</span>';
-          h+='</div><span style="color:#52C9A8">'+(exp?'&#9650;':'&#9660;')+'</span></button>';
+          if(sc==='all'){
+            var dayClients=[];
+            dayData.meals.concat(dayData.journals).forEach(function(i){if(dayClients.indexOf(i.clientName)===-1)dayClients.push(i.clientName);});
+            dayClients.forEach(function(c){h+='<span style="background:#D4F2EB;color:#2D9078;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600">'+esc(c)+'</span>';});
+          }
+          h+='<span style="color:#5A9A8E;font-size:12px">'+totalItems+' records</span>';
+          if(hasFb)h+='<span style="background:#3BAA8C;color:white;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600">Has feedback</span>';
+          h+='</div>';
+          if(date===td)h+='<span class="td" style="font-size:11px;flex-shrink:0">Today</span>';
+          h+='<span style="color:#52C9A8;flex-shrink:0">'+(exp?'&#9650;':'&#9660;')+'</span>';
+          h+='</button>';
           if(exp){
-            h+='<div style="border-top:1px solid #D4F2EB">';
-            dm.forEach(function(meal,i){
-              h+='<div style="padding:12px 18px;border-bottom:'+(i<dm.length-1?'1px solid #D4F2EB':'none')+'">';
-              if(meal.isEmergency)h+='<span class="ts" style="font-size:11px;margin-bottom:6px;display:inline-block">Special</span>';
-              else h+='<span class="td" style="font-size:11px;margin-bottom:6px;display:inline-block">'+esc(meal.mealType)+'</span>';
-              h+='<p style="color:#2D7060;font-size:14px;line-height:1.5">'+esc(meal.foods)+'</p>';
-              (meal.feedback||[]).forEach(function(fb){h+='<p style="color:#3BAA8C;font-size:13px;margin-top:4px">Coach: '+esc(fb.text)+'</p>';});
+            h+='<div style="padding:0 16px 16px;border-top:1px solid #D4F2EB">';
+            // 식사들
+            dayData.meals.forEach(function(meal){
+              var fbs=meal.feedback||[];
+              h+='<div style="background:#F4FBFA;border-radius:14px;padding:14px;margin-top:10px">';
+              h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+              if(meal.isEmergency)h+='<span class="ts" style="font-size:11px">Special</span>';
+              else h+='<span class="td" style="font-size:11px">'+esc(meal.mealType)+'</span>';
+              h+='<span style="color:#5A9A8E;font-size:12px">'+esc(meal.time)+'</span>';
+              if(sc==='all')h+='<span style="font-weight:600;color:#2D9078;font-size:13px">'+esc(meal.clientName)+'</span>';
+              h+='</div>';
+              h+='<p style="color:#2D7060;font-size:14px;line-height:1.5;margin-bottom:8px">'+esc(meal.foods)+'</p>';
+              if(meal.fullness){var FL4=['','Still hungry','A little full','Just right','Pretty full','Very full'];h+='<p style="font-size:12px;color:#5A9A8E;margin-bottom:8px">'+esc(FL4[meal.fullness]||'')+(meal.satietyHours?' · '+esc(meal.satietyHours):'')+'</p>';}
+              // 기존 피드백
+              fbs.forEach(function(fb){
+                h+='<div style="background:#E8F8F4;border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+                h+='<p style="font-size:12px;font-weight:700;color:#3BAA8C;margin-bottom:2px">'+esc(fb.author)+' · '+esc(fb.timestamp)+'</p>';
+                h+='<p style="color:#2D7060;font-size:13px">'+esc(fb.text)+'</p></div>';
+              });
+              // 리액션 버튼
+              var rxns=meal.reactions||{};
+              var rxnList=[['⭐','Great!'],['👍','Good job'],['💚','Healthy'],['💪','Keep it up!']];
+              h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+              rxnList.forEach(function(r){
+                var active=rxns[r[0]];
+                h+='<button onclick="toggleReaction(\''+meal.id+'\',\''+r[0]+'\')" style="padding:4px 10px;background:'+(active?'#3BAA8C':'#E8F8F4')+';color:'+(active?'white':'#2D9078')+';border-radius:20px;font-size:12px;font-weight:600">'+r[0]+' '+r[1]+'</button>';
+              });
+              h+='</div>';
+              // 댓글 입력
+              if(S.selMeal==meal.id){
+                h+='<div style="display:flex;gap:6px">';
+                h+='<input id="fb-inp" class="inp" placeholder="Write feedback..." style="flex:1;font-size:14px"/>';
+                h+='<button onclick="addFeedback(\''+meal.id+'\')" class="bs" style="padding:10px 14px">Send</button>';
+                h+='<button onclick="setState({selMeal:\'\'})" style="color:#52C9A8;padding:10px;font-size:18px">&#x2715;</button></div>';
+              }else{
+                h+='<button onclick="setState({selMeal:\''+meal.id+'\'})" style="color:#3BAA8C;font-size:13px;font-weight:600;background:none;border:none;cursor:pointer">+ Add Feedback</button>';
+              }
               h+='</div>';
             });
+
             h+='</div>';
           }
           h+='</div>';
         });
       }
-    }
-  }
-
-  // ── Q&A TAB ──
-  if(tab==='inquiries'){
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Q&amp;A</h2>';
-    if(mode==='client'&&cn)h+='<button onclick="openModal(\'inq\')" class="bp" style="padding:10px 18px;font-size:14px">+ Ask</button>';
-    h+='</div>';
-    if(fInq.length===0){
-      h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600;font-size:16px">No inquiries yet</p></div>';
     }else{
-      fInq.forEach(function(inq){
-        var exp=S.expInq[inq.id];
-        var bc=inq.resolved?'#52C9A8':inq.answer?'#3BAA8C':'#F0B86E';
-        var isNew=mode==='client'&&inq.answer&&!S.readAnswers[String(inq.id)];
-        h+='<div style="background:'+(inq.resolved?'#F4FBFA':'#fff')+';border:1.5px solid #C8EDE6;border-left:4px solid '+bc+';border-radius:16px;margin-bottom:10px;overflow:hidden">';
-        h+='<button onclick="openInq(\''+inq.id+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;cursor:pointer">';
-        h+='<div style="flex:1;min-width:0">';
-        h+='<span class="ts" style="font-size:11px;margin-right:6px">'+esc(inq.category)+'</span>';
-        h+='<span style="font-weight:'+(isNew?'700':'500')+';color:#2D7060;font-size:14px">'+esc(inq.question)+'</span></div>';
-        h+='<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
-        if(isNew)h+='<span style="font-size:11px;color:#fff;font-weight:700;background:#E05C5C;padding:2px 8px;border-radius:10px">NEW</span>';
-        else if(inq.resolved)h+='<span style="color:#3BAA8C;font-size:16px">&#10003;</span>';
-        else if(!inq.answer)h+='<span style="font-size:11px;color:#C8963E;background:#FEF3E2;padding:2px 8px;border-radius:10px;font-weight:600">Pending</span>';
-        else h+='<span style="font-size:11px;color:#2D9078;background:#D4F2EB;padding:2px 8px;border-radius:10px;font-weight:600">Answered</span>';
-        h+='<span style="color:#52C9A8">'+(exp?'&#9650;':'&#9660;')+'</span></div></button>';
-        if(exp){
-          h+='<div style="padding:0 18px 18px;border-top:1px solid #D4F2EB">';
-          h+='<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-bottom:14px">';
-          h+='<span style="color:#5A9A8E;font-size:12px">'+esc(inq.date)+' &middot; '+esc(inq.clientName)+'</span>';
-          if(mode==='coach'){
-            h+='<div style="display:flex;gap:8px">';
-            h+='<button onclick="toggleRes(\''+inq.id+'\')" style="font-size:12px;padding:4px 12px;background:'+(inq.resolved?'#E8F8F4':'#D4F2EB')+';color:'+(inq.resolved?'#5A9A8E':'#2D9078')+';border-radius:10px;font-weight:600;cursor:pointer">'+(inq.resolved?'Unresolve':'Resolved')+'</button>';
-            h+='<button onclick="delInq(\''+inq.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button></div>';
+      // 클라이언트: 코치 피드백 모아보기
+      h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:20px">Feedback from your coach</p>';
+      var myFbMeals=relM.filter(function(m){return(m.feedback||[]).length>0||(m.reactions&&Object.keys(m.reactions).some(function(k){return m.reactions[k];}));});
+      if(myFbMeals.length===0){
+        h+='<div class="card" style="padding:40px;text-align:center">';
+        h+='<p style="font-size:36px;margin-bottom:12px">💬</p>';
+        h+='<p style="color:#5A9A8E;font-weight:600">No feedback yet</p>';
+        h+='<p style="color:#A8DDD5;font-size:14px;margin-top:6px">Your coach will leave feedback on your meals and journals</p></div>';
+      }else{
+        myFbMeals.forEach(function(meal){
+          var fbs=meal.feedback||[];
+          var rxns=meal.reactions||{};
+          var rKeys=Object.keys(rxns).filter(function(k){return rxns[k];});
+          h+='<div class="card" style="padding:18px;margin-bottom:10px">';
+          h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+          h+='<span class="td" style="font-size:11px">'+esc(meal.mealType)+'</span>';
+          h+='<span style="color:#5A9A8E;font-size:13px">'+esc(meal.date)+' '+esc(meal.time)+'</span></div>';
+          h+='<p style="color:#2D7060;font-size:14px;line-height:1.5;margin-bottom:10px">'+esc(meal.foods)+'</p>';
+          if(rKeys.length>0){
+            h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+            rKeys.forEach(function(e){h+='<span style="padding:4px 12px;background:#3BAA8C;color:white;border-radius:20px;font-size:13px;font-weight:600">'+e+'</span>';});
+            h+='</div>';
           }
+          fbs.forEach(function(fb){
+            h+='<div style="background:#E8F8F4;border-radius:12px;padding:12px 14px;margin-bottom:6px">';
+            h+='<p style="font-size:12px;font-weight:700;color:#3BAA8C;margin-bottom:4px">Coach · '+esc(fb.timestamp)+'</p>';
+            h+='<p style="color:#2D7060;font-size:14px">'+esc(fb.text)+'</p></div>';
+          });
           h+='</div>';
-          h+='<div style="background:#E8F8F4;border-radius:12px;padding:12px 14px;margin-bottom:12px">';
-          h+='<p style="font-size:11px;font-weight:700;color:#5A9A8E;margin-bottom:4px">QUESTION</p>';
-          h+='<p style="color:#2D7060;line-height:1.6;font-size:14px">'+esc(inq.question)+'</p></div>';
-          if(inq.answer){
-            h+='<div style="background:#3BAA8C;border-radius:14px;padding:14px 18px;color:white">';
-            h+='<p style="font-size:11px;font-weight:700;opacity:.6;margin-bottom:4px">COACH REPLY</p>';
-            h+='<p style="font-size:14px;line-height:1.6">'+esc(inq.answer)+'</p></div>';
-          }else if(mode==='coach'){
-            if(S.ansId==inq.id){
-              h+='<div style="display:flex;flex-direction:column;gap:8px">';
-              h+='<textarea id="ans-txt" class="inp" rows="4" placeholder="Write your reply..." style="resize:none">'+esc(S.ansText)+'</textarea>';
-              h+='<div style="display:flex;gap:8px">';
-              h+='<button onclick="submitAnswer(\''+inq.id+'\')" class="bp" style="flex:1;padding:12px"'+(S.saving?' disabled':'')+'>Submit</button>';
-              h+='<button onclick="setState({ansId:\'\',ansText:\'\'})" style="padding:12px 14px;background:#E8F8F4;border:none;border-radius:12px;cursor:pointer">&#x2715;</button></div></div>';
-            }else{
-              h+='<button onclick="setState({ansId:\''+inq.id+'\'})" class="bp" style="width:100%;padding:12px">Reply</button>';
-            }
-          }else{
-            h+='<div style="background:#E8F8F4;border-radius:12px;padding:14px;text-align:center"><p style="color:#5A9A8E;font-size:14px">Your coach will reply soon</p></div>';
-          }
-          h+='</div>';
-        }
-        h+='</div>';
-      });
-    }
-  }
+        });
 
-  // ── POSTS TAB ──
-  if(tab==='posts'){
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">'+(mode==='client'?'Notice':'Posts')+'</h2>';
-    if(mode==='coach')h+='<button onclick="openModal(\'post\')" class="bp" style="padding:10px 18px;font-size:14px">+ New Post</button>';
-    h+='</div>';
-    if(posts.length===0){
-      h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600">No posts yet</p></div>';
-    }else{
-      posts.forEach(function(post){
-        var isNew=mode==='client'&&!S.readPosts[String(post.id)];
-        h+='<div class="card" style="padding:22px;margin-bottom:12px'+(isNew?';border-left:4px solid #E05C5C':'')+'">';
-        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
-        h+='<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
-        h+='<h3 style="font-family:\'DM Serif Display\',serif;font-size:19px;color:#1A6B58">'+esc(post.title)+'</h3>';
-        if(isNew)h+='<span style="font-size:11px;color:#fff;font-weight:700;background:#E05C5C;padding:2px 8px;border-radius:10px">NEW</span>';
-        h+='</div><p style="color:#5A9A8E;font-size:12px">'+esc(post.date)+'</p></div>';
-        if(mode==='coach')h+='<button onclick="delPost(\''+post.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button>';
-        h+='</div>';
-        if(post.imageUrl)h+='<img src="'+esc(post.imageUrl)+'" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:300px;object-fit:cover"/>';
-        h+='<p style="color:#2D7060;line-height:1.7;font-size:15px;white-space:pre-line">'+esc(post.content)+'</p></div>';
-      });
-    }
-  }
-
-  // ── MEETINGS TAB ──
-  if(tab==='meetings'){
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Meetings</h2>';
-    if(mode==='coach'){
-      h+='<div style="display:flex;gap:8px">';
-      h+='<button onclick="openModal(\'contract\')" style="padding:10px 14px;background:#E8F8F4;border:1.5px solid #3BAA8C;border-radius:14px;font-weight:600;font-size:13px;cursor:pointer;color:#2D9078">Contract</button>';
-      h+='<button onclick="openModal(\'mtg\')" class="bp" style="padding:10px 18px;font-size:14px">+ Schedule</button></div>';
-    }
-    h+='</div>';
-
-    var ctKey=mode==='coach'?sc:cn;
-    var ct=S.contracts[ctKey];
-    if(ct&&ct.start&&ct.end){
-      var startD=new Date(ct.start), endD=new Date(ct.end), todayD=new Date(td);
-      var total=Math.round((endD-startD)/(1000*60*60*24));
-      var elapsed=Math.round((todayD-startD)/(1000*60*60*24));
-      var remaining=Math.round((endD-todayD)/(1000*60*60*24));
-      var pct=Math.min(100,Math.max(0,Math.round((elapsed/total)*100)));
-      var isExpired=todayD>endD, isActive=todayD>=startD&&!isExpired;
-      h+='<div style="background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:20px;padding:22px;margin-bottom:20px;color:white">';
-      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">';
-      h+='<div><p style="font-size:12px;opacity:.75;font-weight:600;text-transform:uppercase">Contract Period</p>';
-      h+='<p style="font-family:\'DM Serif Display\',serif;font-size:20px;margin-top:4px">'+(ct.plan?esc(ct.plan):'Coaching Plan')+'</p></div>';
-      if(isExpired)h+='<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Expired</span>';
-      else if(isActive)h+='<span style="background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Active</span>';
-      else h+='<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Upcoming</span>';
-      h+='</div>';
-      h+='<div style="display:flex;justify-content:space-between;font-size:13px;opacity:.85;margin-bottom:10px">';
-      h+='<span>'+fmtDate(ct.start)+'</span><span>'+fmtDate(ct.end)+'</span></div>';
-      h+='<div style="background:rgba(255,255,255,0.25);border-radius:100px;height:8px;overflow:hidden;margin-bottom:10px">';
-      h+='<div style="background:white;height:100%;border-radius:100px;width:'+pct+'%"></div></div>';
-      h+='<div style="display:flex;justify-content:space-between;font-size:13px">';
-      if(isExpired)h+='<span style="opacity:.8">Contract ended</span>';
-      else if(isActive)h+='<span style="opacity:.8">'+remaining+' days remaining</span>';
-      else h+='<span style="opacity:.8">Starts in '+Math.round((startD-todayD)/(1000*60*60*24))+' days</span>';
-      h+='<span style="opacity:.8">'+pct+'% complete</span></div>';
-      if(mode==='coach')h+='<button onclick="openModal(\'contract\')" style="margin-top:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:10px;padding:6px 14px;color:white;font-size:12px;font-weight:600;cursor:pointer">Edit</button>';
-      h+='</div>';
-    }else if(mode==='coach'&&sc!=='all'){
-      h+='<div class="cw" style="padding:18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">';
-      h+='<div style="flex:1"><p style="font-weight:600;color:#2D9078">No contract set</p>';
-      h+='<p style="color:#5A9A8E;font-size:13px">Set a contract period for '+esc(sc)+'</p></div>';
-      h+='<button onclick="openModal(\'contract\')" class="bp" style="padding:8px 14px;font-size:13px">Set</button></div>';
-    }else if(mode==='client'){
-      h+='<div class="cw" style="padding:18px;margin-bottom:20px"><p style="color:#5A9A8E;font-size:14px;text-align:center">Your coach will set your contract period here</p></div>';
-    }
-
-    if(upMtg.length>0){
-      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Upcoming</p>';
-      upMtg.forEach(function(m){
-        h+='<div class="upc" style="margin-bottom:10px">';
-        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
-        h+='<div><p style="font-family:\'DM Serif Display\',serif;font-size:20px;margin-bottom:6px">'+esc(m.title)+'</p>';
-        h+='<p style="opacity:.75;font-size:13px">'+esc(m.date)+' &middot; '+esc(m.time)+'</p>';
-        if(mode==='coach')h+='<p style="opacity:.9;font-size:14px;margin-top:4px;font-weight:600">'+esc(m.clientName)+'</p>';
-        h+='</div>';
-        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button>';
-        h+='</div>';
-        if(m.notes)h+='<p style="opacity:.8;font-size:14px;margin-top:10px;line-height:1.5">'+esc(m.notes)+'</p>';
-        h+='</div>';
-      });
-    }
-    if(pastMtg.length>0){
-      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:'+(upMtg.length>0?'24':'0')+'px">Past</p>';
-      pastMtg.forEach(function(m){
-        h+='<div class="cw" style="padding:18px;margin-bottom:10px;opacity:.8">';
-        h+='<div style="display:flex;justify-content:space-between">';
-        h+='<div><p style="font-weight:600;color:#2D9078;font-size:15px;margin-bottom:4px">'+esc(m.title)+'</p>';
-        h+='<p style="color:#5A9A8E;font-size:13px">'+esc(m.date)+' &middot; '+esc(m.time)+'</p>';
-        if(mode==='coach')h+='<p style="color:#3BAA8C;font-size:13px;margin-top:4px">'+esc(m.clientName)+'</p>';
-        h+='</div>';
-        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:16px">&#x2715;</button>';
-        h+='</div></div>';
-      });
-    }
-    if(relMtg.length===0&&!(ct&&ct.start)){
-      h+='<div class="card" style="padding:40px;text-align:center"><p style="color:#5A9A8E;font-weight:600">No meetings yet</p></div>';
+      }
     }
   }
 
   // ── GOALS TAB ──
   if(tab==='goals'){
+
     var wk7=new Date();wk7.setDate(wk7.getDate()-7);
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
     h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Goals</h2>';
-    if(mode==='coach')h+='<button onclick="setState({goalTarget:sc!==\'all\'?sc:\'\',modal:\'setGoal\'})" class="bp" style="padding:10px 18px;font-size:14px">+ Set Goal</button>';
+    if(mode==='coach')h+='<button onclick="setState({goalTarget:S.selClient!==\'all\'?S.selClient:\'\',modal:\'setGoal\'})" class="bp" style="padding:10px 18px;font-size:14px">+ Set Goal</button>';
     h+='</div>';
     if(mode==='coach'){
       var gcKeys=Object.keys(S.goals);
@@ -1067,52 +943,15 @@ function buildApp(){
         }
       }
     }
-  }
 
-  // ── TEMPLATE TAB ──
-  if(tab==='template'){
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
-    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">'+(mode==='coach'?'Templates':'Diet Plan')+'</h2>';
-    if(mode==='coach')h+='<button onclick="openModal(\'addTemplate\')" class="bp" style="padding:10px 18px;font-size:14px">+ New</button>';
+
+    // ── Calendar ──
+  if(mode==='client'){
+    h+='<div style="margin:32px 0 22px;display:flex;align-items:center;gap:12px">';
+    h+='<div style="flex:1;height:1.5px;background:linear-gradient(to right,#C8EDE6,transparent)"></div>';
+    h+='<span style="font-size:12px;font-weight:700;color:#5A9A8E;letter-spacing:.08em;text-transform:uppercase">Calendar</span>';
+    h+='<div style="flex:1;height:1.5px;background:linear-gradient(to left,#C8EDE6,transparent)"></div>';
     h+='</div>';
-    if(mode==='client')h+='<p style="color:#5A9A8E;font-size:14px;line-height:1.6;margin-bottom:20px">Diet plans aren\'t always provided — your coach will share one when needed. In the meantime, enjoy eating what feels good to you and listen to your body!</p>';
-    if(mode==='coach'){
-      if(S.templates.length===0){
-        h+='<div class="card" style="padding:40px;text-align:center">';
-        h+='<p style="font-size:36px;margin-bottom:12px">🥗</p>';
-        h+='<p style="color:#5A9A8E;font-weight:600">No templates yet</p>';
-        h+='<p style="color:#A8DDD5;font-size:14px;margin-top:6px">Create one to share with clients</p></div>';
-      }else{
-        S.templates.forEach(function(tpl){
-          h+='<div class="card" style="padding:20px;margin-bottom:12px">';
-          h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
-          h+='<div>';
-          h+='<h3 style="font-weight:700;color:#1A6B58;font-size:17px;margin-bottom:6px">'+esc(tpl.title)+'</h3>';
-          h+='<span class="ts" style="font-size:11px">'+(tpl.target==='all'?'All Clients':esc(tpl.target))+'</span>';
-          h+='</div>';
-          h+='<button onclick="delTemplate('+tpl.id+')" style="color:#52C9A8;font-size:18px">&#x2715;</button></div>';
-          h+='<pre style="color:#2D7060;font-size:13px;line-height:1.7;white-space:pre-wrap;font-family:inherit;background:#F4FBFA;border-radius:12px;padding:14px">'+esc(tpl.content)+'</pre></div>';
-        });
-      }
-    }else{
-      var myTpls=S.templates.filter(function(t){return t.target==='all'||t.target===cn;});
-      if(myTpls.length===0){
-        h+='<div class="card" style="padding:40px;text-align:center">';
-        h+='<p style="font-size:36px;margin-bottom:12px">🥗</p>';
-        h+='<p style="color:#5A9A8E;font-weight:600;font-size:16px">No diet plan yet</p>';
-        h+='<p style="color:#A8DDD5;font-size:14px;margin-top:6px">Your coach will share one soon!</p></div>';
-      }else{
-        myTpls.forEach(function(tpl){
-          h+='<div class="card" style="padding:22px;margin-bottom:12px">';
-          h+='<h3 style="font-family:\'DM Serif Display\',serif;font-weight:700;color:#1A6B58;font-size:20px;margin-bottom:14px">'+esc(tpl.title)+'</h3>';
-          h+='<pre style="color:#2D7060;font-size:14px;line-height:1.8;white-space:pre-wrap;font-family:inherit;background:#F4FBFA;border-radius:12px;padding:16px">'+esc(tpl.content)+'</pre></div>';
-        });
-      }
-    }
-  }
-
-  // ── CALENDAR TAB ──
-  if(tab==='calendar'){
     var cy=S.calYear, cm=S.calMonth;
     var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var firstDay=new Date(cy,cm,1).getDay();
@@ -1219,6 +1058,223 @@ function buildApp(){
     }
   }
 
+
+
+  }
+
+  // ── TEMPLATE TAB ──
+  if(tab==='template'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">'+(mode==='coach'?'Templates':'Diet Plan')+'</h2>';
+    if(mode==='coach')h+='<button onclick="openModal(\'addTemplate\')" class="bp" style="padding:10px 18px;font-size:14px">+ New</button>';
+    h+='</div>';
+    if(mode==='client')h+='<p style="color:#5A9A8E;font-size:14px;line-height:1.6;margin-bottom:20px">Diet plans aren\'t always provided — your coach will share one when needed. In the meantime, enjoy eating what feels good to you and listen to your body!</p>';
+    if(mode==='coach'){
+      if(S.templates.length===0){
+        h+='<div class="card" style="padding:40px;text-align:center">';
+        h+='<p style="font-size:36px;margin-bottom:12px">🥗</p>';
+        h+='<p style="color:#5A9A8E;font-weight:600">No templates yet</p>';
+        h+='<p style="color:#A8DDD5;font-size:14px;margin-top:6px">Create one to share with clients</p></div>';
+      }else{
+        S.templates.forEach(function(tpl){
+          h+='<div class="card" style="padding:20px;margin-bottom:12px">';
+          h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
+          h+='<div>';
+          h+='<h3 style="font-weight:700;color:#1A6B58;font-size:17px;margin-bottom:6px">'+esc(tpl.title)+'</h3>';
+          h+='<span class="ts" style="font-size:11px">'+(tpl.target==='all'?'All Clients':esc(tpl.target))+'</span>';
+          h+='</div>';
+          h+='<button onclick="delTemplate('+tpl.id+')" style="color:#52C9A8;font-size:18px">&#x2715;</button></div>';
+          if(tpl.imageUrl)h+='<img src="'+esc(tpl.imageUrl)+'" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:280px;object-fit:cover"/>';
+          h+='<pre style="color:#2D7060;font-size:13px;line-height:1.7;white-space:pre-wrap;font-family:inherit;background:#F4FBFA;border-radius:12px;padding:14px">'+esc(tpl.content)+'</pre></div>';
+        });
+      }
+    }else{
+      var myTpls=S.templates.filter(function(t){return t.target==='all'||t.target===cn;});
+      if(myTpls.length===0){
+        h+='<div class="card" style="padding:40px;text-align:center">';
+        h+='<p style="font-size:36px;margin-bottom:12px">🥗</p>';
+        h+='<p style="color:#5A9A8E;font-weight:600;font-size:16px">No diet plan yet</p>';
+        h+='<p style="color:#A8DDD5;font-size:14px;margin-top:6px">Your coach will share one soon!</p></div>';
+      }else{
+        myTpls.forEach(function(tpl){
+          h+='<div class="card" style="padding:22px;margin-bottom:12px">';
+          h+='<h3 style="font-family:\'DM Serif Display\',serif;font-weight:700;color:#1A6B58;font-size:20px;margin-bottom:14px">'+esc(tpl.title)+'</h3>';
+          if(tpl.imageUrl)h+='<img src="'+esc(tpl.imageUrl)+'" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:300px;object-fit:cover"/>';
+          h+='<pre style="color:#2D7060;font-size:14px;line-height:1.8;white-space:pre-wrap;font-family:inherit;background:#F4FBFA;border-radius:12px;padding:16px">'+esc(tpl.content)+'</pre></div>';
+        });
+      }
+    }
+  }
+
+
+  // ── Q&A TAB ──
+  if(tab==='inquiries'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Q&amp;A</h2>';
+    if(mode==='client'&&cn)h+='<button onclick="openModal(\'inq\')" class="bp" style="padding:10px 18px;font-size:14px">+ Ask</button>';
+    h+='</div>';
+    if(fInq.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><p style="font-size:36px;margin-bottom:12px">💬</p><p style="color:#5A9A8E;font-weight:600;font-size:16px">No inquiries yet</p></div>';
+    }else{
+      fInq.forEach(function(inq){
+        var exp=S.expInq[inq.id];
+        var bc=inq.resolved?'#52C9A8':inq.answer?'#3BAA8C':'#F0B86E';
+        var isNew=mode==='client'&&inq.answer&&!S.readAnswers[String(inq.id)];
+        h+='<div style="background:'+(inq.resolved?'#F4FBFA':'#fff')+';border:1.5px solid #C8EDE6;border-left:4px solid '+bc+';border-radius:16px;margin-bottom:10px;overflow:hidden">';
+        h+='<button onclick="openInq(\''+inq.id+'\')" style="width:100%;padding:14px 18px;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;cursor:pointer">';
+        h+='<div style="flex:1;min-width:0">';
+        h+='<span class="ts" style="font-size:11px;margin-right:6px">'+esc(inq.category)+'</span>';
+        h+='<span style="font-weight:'+(isNew?'700':'500')+';color:#2D7060;font-size:14px">'+esc(inq.question)+'</span></div>';
+        h+='<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
+        if(isNew)h+='<span style="font-size:11px;color:#fff;font-weight:700;background:#E05C5C;padding:2px 8px;border-radius:10px">NEW</span>';
+        else if(inq.resolved)h+='<span style="color:#3BAA8C;font-size:16px">&#10003;</span>';
+        else if(!inq.answer)h+='<span style="font-size:11px;color:#C8963E;background:#FEF3E2;padding:2px 8px;border-radius:10px;font-weight:600">Pending</span>';
+        else h+='<span style="font-size:11px;color:#2D9078;background:#D4F2EB;padding:2px 8px;border-radius:10px;font-weight:600">Answered</span>';
+        h+='<span style="color:#52C9A8">'+(exp?'&#9650;':'&#9660;')+'</span></div></button>';
+        if(exp){
+          h+='<div style="padding:0 18px 18px;border-top:1px solid #D4F2EB">';
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-bottom:14px">';
+          h+='<span style="color:#5A9A8E;font-size:12px">'+esc(inq.date)+' &middot; '+esc(inq.clientName)+'</span>';
+          if(mode==='coach'){
+            h+='<div style="display:flex;gap:8px">';
+            h+='<button onclick="toggleRes(\''+inq.id+'\')" style="font-size:12px;padding:4px 12px;background:'+(inq.resolved?'#E8F8F4':'#D4F2EB')+';color:'+(inq.resolved?'#5A9A8E':'#2D9078')+';border-radius:10px;font-weight:600;cursor:pointer">'+(inq.resolved?'Unresolve':'Resolved')+'</button>';
+            h+='<button onclick="delInq(\''+inq.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button></div>';
+          }
+          h+='</div>';
+          h+='<div style="background:#E8F8F4;border-radius:12px;padding:12px 14px;margin-bottom:12px">';
+          h+='<p style="font-size:11px;font-weight:700;color:#5A9A8E;margin-bottom:4px">QUESTION</p>';
+          h+='<p style="color:#2D7060;line-height:1.6;font-size:14px">'+esc(inq.question)+'</p></div>';
+          if(inq.answer){
+            h+='<div style="background:#3BAA8C;border-radius:14px;padding:14px 18px;color:white">';
+            h+='<p style="font-size:11px;font-weight:700;opacity:.6;margin-bottom:4px">COACH REPLY</p>';
+            h+='<p style="font-size:14px;line-height:1.6">'+esc(inq.answer)+'</p></div>';
+          }else if(mode==='coach'){
+            if(S.ansId==inq.id){
+              h+='<div style="display:flex;flex-direction:column;gap:8px">';
+              h+='<textarea id="ans-txt" class="inp" rows="4" placeholder="Write your reply..." style="resize:none">'+esc(S.ansText)+'</textarea>';
+              h+='<div style="display:flex;gap:8px">';
+              h+='<button onclick="submitAnswer(\''+inq.id+'\')" class="bp" style="flex:1;padding:12px"'+(S.saving?' disabled':'')+'>Submit</button>';
+              h+='<button onclick="setState({ansId:\'\',ansText:\'\'})" style="padding:12px 14px;background:#E8F8F4;border:none;border-radius:12px;cursor:pointer">&#x2715;</button></div></div>';
+            }else{
+              h+='<button onclick="setState({ansId:\''+inq.id+'\'})" class="bp" style="width:100%;padding:12px">Reply</button>';
+            }
+          }else{
+            h+='<div style="background:#E8F8F4;border-radius:12px;padding:14px;text-align:center"><p style="color:#5A9A8E;font-size:14px">Your coach will reply soon</p></div>';
+          }
+          h+='</div>';
+        }
+        h+='</div>';
+      });
+    }
+  }
+
+  // ── POSTS TAB ──
+  if(tab==='posts'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">'+(mode==='client'?'Notice':'Posts')+'</h2>';
+    if(mode==='coach')h+='<button onclick="openModal(\'post\')" class="bp" style="padding:10px 18px;font-size:14px">+ New Post</button>';
+    h+='</div>';
+    if(posts.length===0){
+      h+='<div class="card" style="padding:40px;text-align:center"><p style="font-size:36px;margin-bottom:12px">📢</p><p style="color:#5A9A8E;font-weight:600">No posts yet</p></div>';
+    }else{
+      posts.forEach(function(post){
+        var isNew=mode==='client'&&!S.readPosts[String(post.id)];
+        h+='<div class="card" style="padding:22px;margin-bottom:12px'+(isNew?';border-left:4px solid #E05C5C':'')+'">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
+        h+='<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+        h+='<h3 style="font-family:\'DM Serif Display\',serif;font-size:19px;color:#1A6B58">'+esc(post.title)+'</h3>';
+        if(isNew)h+='<span style="font-size:11px;color:#fff;font-weight:700;background:#E05C5C;padding:2px 8px;border-radius:10px">NEW</span>';
+        h+='</div><p style="color:#5A9A8E;font-size:12px">'+esc(post.date)+'</p></div>';
+        if(mode==='coach')h+='<button onclick="delPost(\''+post.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button>';
+        h+='</div>';
+        if(post.imageUrl)h+='<img src="'+esc(post.imageUrl)+'" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:300px;object-fit:cover"/>';
+        h+='<p style="color:#2D7060;line-height:1.7;font-size:15px;white-space:pre-line">'+esc(post.content)+'</p></div>';
+      });
+    }
+  }
+
+  // ── MEETINGS TAB ──
+  if(tab==='meetings'){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+    h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58">Meetings</h2>';
+    if(mode==='coach'){
+      h+='<div style="display:flex;gap:8px">';
+      h+='<button onclick="openModal(\'contract\')" style="padding:10px 14px;background:#E8F8F4;border:1.5px solid #3BAA8C;border-radius:14px;font-weight:600;font-size:13px;cursor:pointer;color:#2D9078">Contract</button>';
+      h+='<button onclick="openModal(\'mtg\')" class="bp" style="padding:10px 18px;font-size:14px">+ Schedule</button></div>';
+    }
+    h+='</div>';
+    var ctKey=mode==='coach'?sc:cn;
+    var ct=S.contracts[ctKey];
+    if(ct&&ct.start&&ct.end){
+      var startD=new Date(ct.start),endD=new Date(ct.end),todayD=new Date(td);
+      var total=Math.round((endD-startD)/(1000*60*60*24));
+      var elapsed=Math.round((todayD-startD)/(1000*60*60*24));
+      var remaining=Math.round((endD-todayD)/(1000*60*60*24));
+      var pct=Math.min(100,Math.max(0,Math.round((elapsed/total)*100)));
+      var isExpired=todayD>endD,isActive=todayD>=startD&&!isExpired;
+      h+='<div style="background:linear-gradient(135deg,#3BAA8C,#52C9A8);border-radius:20px;padding:22px;margin-bottom:20px;color:white">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">';
+      h+='<div><p style="font-size:12px;opacity:.75;font-weight:600;text-transform:uppercase">Contract Period</p>';
+      h+='<p style="font-family:\'DM Serif Display\',serif;font-size:20px;margin-top:4px">'+(ct.plan?esc(ct.plan):'Coaching Plan')+'</p></div>';
+      if(isExpired)h+='<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Expired</span>';
+      else if(isActive)h+='<span style="background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Active</span>';
+      else h+='<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">Upcoming</span>';
+      h+='</div>';
+      h+='<div style="display:flex;justify-content:space-between;font-size:13px;opacity:.85;margin-bottom:10px"><span>'+fmtDate(ct.start)+'</span><span>'+fmtDate(ct.end)+'</span></div>';
+      h+='<div style="background:rgba(255,255,255,0.25);border-radius:100px;height:8px;overflow:hidden;margin-bottom:10px">';
+      h+='<div style="background:white;height:100%;border-radius:100px;width:'+pct+'%"></div></div>';
+      h+='<div style="display:flex;justify-content:space-between;font-size:13px">';
+      if(isExpired)h+='<span style="opacity:.8">Contract ended</span>';
+      else if(isActive)h+='<span style="opacity:.8">'+remaining+' days remaining</span>';
+      else h+='<span style="opacity:.8">Starts in '+Math.round((startD-todayD)/(1000*60*60*24))+' days</span>';
+      h+='<span style="opacity:.8">'+pct+'% complete</span></div>';
+      if(mode==='coach')h+='<button onclick="openModal(\'contract\')" style="margin-top:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:10px;padding:6px 14px;color:white;font-size:12px;font-weight:600;cursor:pointer">Edit</button>';
+      h+='</div>';
+    }else if(mode==='coach'&&sc!=='all'){
+      h+='<div class="cw" style="padding:18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">';
+      h+='<div style="flex:1"><p style="font-weight:600;color:#2D9078">No contract set</p>';
+      h+='<p style="color:#5A9A8E;font-size:13px">Set a contract period for '+esc(sc)+'</p></div>';
+      h+='<button onclick="openModal(\'contract\')" class="bp" style="padding:8px 14px;font-size:13px">Set</button></div>';
+    }else if(mode==='client'){
+      h+='<div class="cw" style="padding:18px;margin-bottom:20px"><p style="color:#5A9A8E;font-size:14px;text-align:center">Your coach will set your contract period here</p></div>';
+    }
+    var now2=new Date();
+    var upMtg2=relMtg.filter(function(m){return new Date(m.date+' '+m.time)>=now2;});
+    var pastMtg2=relMtg.filter(function(m){return new Date(m.date+' '+m.time)<now2;}).sort(function(a,b){return new Date(b.date+' '+b.time)-new Date(a.date+' '+a.time);});
+    if(upMtg2.length>0){
+      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Upcoming</p>';
+      upMtg2.forEach(function(m){
+        h+='<div class="upc" style="margin-bottom:10px">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+        h+='<div><p style="font-family:\'DM Serif Display\',serif;font-size:20px;margin-bottom:6px">'+esc(m.title)+'</p>';
+        h+='<p style="opacity:.75;font-size:13px">'+esc(m.date)+' &middot; '+esc(m.time)+'</p>';
+        if(mode==='coach')h+='<p style="opacity:.9;font-size:14px;margin-top:4px;font-weight:600">'+esc(m.clientName)+'</p>';
+        h+='</div>';
+        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-size:18px">&#x2715;</button>';
+        h+='</div>';
+        if(m.notes)h+='<p style="opacity:.8;font-size:14px;margin-top:10px;line-height:1.5">'+esc(m.notes)+'</p>';
+        h+='</div>';
+      });
+    }
+    if(pastMtg2.length>0){
+      h+='<p style="font-size:12px;font-weight:700;color:#5A9A8E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:'+(upMtg2.length>0?'24':'0')+'px">Past</p>';
+      pastMtg2.forEach(function(m){
+        h+='<div class="cw" style="padding:18px;margin-bottom:10px;opacity:.8">';
+        h+='<div style="display:flex;justify-content:space-between">';
+        h+='<div><p style="font-weight:600;color:#2D9078;font-size:15px;margin-bottom:4px">'+esc(m.title)+'</p>';
+        h+='<p style="color:#5A9A8E;font-size:13px">'+esc(m.date)+' &middot; '+esc(m.time)+'</p>';
+        if(mode==='coach')h+='<p style="color:#3BAA8C;font-size:13px;margin-top:4px">'+esc(m.clientName)+'</p>';
+        h+='</div>';
+        if(mode==='coach')h+='<button onclick="delMtg(\''+m.id+'\')" style="color:#52C9A8;background:none;border:none;cursor:pointer;font-size:16px">&#x2715;</button>';
+        h+='</div></div>';
+      });
+    }
+    if(relMtg.length===0&&!(ct&&ct.start)){
+      h+='<div class="card" style="padding:40px;text-align:center"><p style="font-size:36px;margin-bottom:12px">📅</p><p style="color:#5A9A8E;font-weight:600">No meetings yet</p></div>';
+    }
+  }
+
+
   // ── PAYMENT TAB ──
   if(tab==='payment'){
     if(mode==='coach'){
@@ -1309,15 +1365,22 @@ function buildMealCard(meal,mode){
       }
     }
 
-      // 리액션
+      // 리액션 - 코치만 누를 수 있음, 클라이언트는 받은 것만 표시
       var rxns=meal.reactions||{};
-      var rxnList=[['⭐','Great!'],['👍','Good job'],['💚','Healthy'],['💪','Keep it up!']];
-      h+='<div style="display:flex;gap:6px;padding-top:10px;flex-wrap:wrap">';
-      rxnList.forEach(function(r){
-        var active=rxns[r[0]];
-        h+='<button onclick="toggleReaction(\''+meal.id+'\',\''+r[0]+'\')" style="padding:5px 12px;background:'+(active?'#3BAA8C':'#E8F8F4')+';color:'+(active?'white':'#2D9078')+';border-radius:20px;font-size:13px;font-weight:600">'+r[0]+' '+r[1]+'</button>';
-      });
-      h+='</div>';
+      var rKeysActive=Object.keys(rxns).filter(function(k){return rxns[k];});
+      if(mode==='coach'){
+        var rxnList=[['⭐','Great!'],['👍','Good job'],['💚','Healthy'],['💪','Keep it up!']];
+        h+='<div style="display:flex;gap:6px;padding-top:10px;flex-wrap:wrap">';
+        rxnList.forEach(function(r){
+          var active=rxns[r[0]];
+          h+='<button onclick="toggleReaction(\''+meal.id+'\',\''+r[0]+'\')" style="padding:5px 12px;background:'+(active?'#3BAA8C':'#E8F8F4')+';color:'+(active?'white':'#2D9078')+';border-radius:20px;font-size:13px;font-weight:600">'+r[0]+' '+r[1]+'</button>';
+        });
+        h+='</div>';
+      }else if(rKeysActive.length>0){
+        h+='<div style="display:flex;gap:6px;padding-top:8px;flex-wrap:wrap">';
+        rKeysActive.forEach(function(e){h+='<span style="padding:4px 12px;background:#E8F8F4;color:#2D9078;border-radius:20px;font-size:13px;font-weight:600">'+e+'</span>';});
+        h+='</div>';
+      }
     h+='</div>';
   }
   return h+'</div>';
@@ -1619,15 +1682,22 @@ window.saveGoal=function(){
 };
 
 // ── Templates ──
+window.handleTplImg=function(e){
+  var file=e.target.files[0];if(!file)return;
+  setState({tplUp:true,tplPrev:URL.createObjectURL(file)});
+  uploadImg(file).then(function(url){setState({tplImg:url,tplUp:false});}).catch(function(){
+    alert('Image upload failed');setState({tplUp:false,tplPrev:'',tplImg:''});
+  });
+};
 window.saveTemplate=function(){
   var title=(document.getElementById('tpl-title')&&document.getElementById('tpl-title').value)||'';
   var target=(document.getElementById('tpl-target')&&document.getElementById('tpl-target').value)||'all';
   var content=(document.getElementById('tpl-content')&&document.getElementById('tpl-content').value)||'';
   if(!title.trim()||!content.trim())return alert('Please fill in title and content.');
-  var tpl={id:Date.now(),title:title,target:target,content:content};
+  var tpl={id:Date.now(),title:title,target:target,content:content,imageUrl:S.tplImg||''};
   var tpls=S.templates.concat([tpl]);
   lsSet('templates',tpls);
-  setState({templates:tpls,modal:''});
+  setState({templates:tpls,modal:'',tplImg:'',tplPrev:'',tplUp:false});
 };
 window.delTemplate=function(id){
   var tpls=S.templates.filter(function(t){return t.id!=id;});
