@@ -55,6 +55,7 @@ input,textarea,select{font-family:'DM Sans',sans-serif;font-size:16px}
         <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Login</button>
       </div>
     </div>
+    <button onclick="authCoach()" style="margin-top:18px;background:transparent;border:1.5px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;width:100%">🔑 Coach Login</button>
   </div>
 </div>
 <div id="app"></div>
@@ -77,6 +78,17 @@ function authTab(tab){
   }
   submitBtn.dataset.tab=tab;
 }
+function authCoach(){
+  var pw=prompt('Coach password:');
+  if(!pw)return;
+  var CPW='9324';
+  if(pw===CPW){
+    document.getElementById('auth-screen').style.display='none';
+    if(typeof S!=='undefined'){S.mode='coach';S.clientName='coach';render();}
+  }else{
+    alert('Incorrect coach password.');
+  }
+}
 function authSubmit(){
   var btn=document.getElementById('auth-submit-btn');
   var tab=btn.dataset.tab||'login';
@@ -94,7 +106,19 @@ function authSubmit(){
     document.getElementById('auth-pw').value='';
   }else{
     var savedPw=localStorage.getItem('mf_pw_'+n);
-    if(!savedPw){alert('No account found. Please sign up first.');return;}
+    // 기존 방식 호환 (clientPw로 저장된 구버전)
+    if(!savedPw){
+      var oldPw=localStorage.getItem('clientPw');
+      var oldName=localStorage.getItem('clientName');
+      if(oldPw&&p===oldPw){
+        // 새 키로 마이그레이션
+        localStorage.setItem('mf_pw_'+n,oldPw);
+        localStorage.setItem('mf_approved_'+n,'1');
+        savedPw=oldPw;
+      }else{
+        alert('No account found. Please sign up first.');return;
+      }
+    }
     if(p!==savedPw){alert('Incorrect password.');return;}
     var approved=localStorage.getItem('mf_approved_'+n);
     if(approved==='0'){alert('Pending coach approval. Please wait.');return;}
@@ -2043,7 +2067,7 @@ window.showCalDay=function(date,focus){
 
 render();
 sync();
-(function(){var cn=localStorage.getItem('clientName')||'';if(!cn){showAuthScreen();}else{var sc=document.getElementById('auth-screen');if(sc)sc.style.display='none';}})();
+(function(){var cn=localStorage.getItem('clientName')||'';var mode=typeof S!=='undefined'?S.mode:'client';if(mode==='coach'){var sc=document.getElementById('auth-screen');if(sc)sc.style.display='none';}else if(!cn){showAuthScreen();}else{var sc=document.getElementById('auth-screen');if(sc)sc.style.display='none';}})();
 
 // ── PWA Service Worker ──
 if('serviceWorker' in navigator){
