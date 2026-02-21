@@ -37,9 +37,77 @@ input,textarea,select{font-family:'DM Sans',sans-serif;font-size:16px}
 </style>
 </head>
 <body>
+<div id="auth-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(160deg,#3BAA8C,#1A6B58);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:400px">
+    <div style="text-align:center;margin-bottom:28px">
+      <p style="font-size:48px;margin-bottom:8px">🌿</p>
+      <h1 style="font-family:'DM Serif Display',serif;color:white;font-size:32px;margin-bottom:4px">Mindfit</h1>
+      <p style="color:rgba(255,255,255,0.75);font-size:15px">Your personal nutrition coach</p>
+    </div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;border:1px solid rgba(255,255,255,0.2)">
+      <div style="display:flex;background:rgba(0,0,0,0.15);border-radius:12px;padding:4px;margin-bottom:16px">
+        <button id="tab-login-btn" onclick="authTab('login')" style="flex:1;padding:9px;border-radius:9px;font-weight:700;font-size:14px;border:none;cursor:pointer">Login</button>
+        <button id="tab-signup-btn" onclick="authTab('signup')" style="flex:1;padding:9px;border-radius:9px;font-weight:700;font-size:14px;border:none;cursor:pointer">Sign Up</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="auth-name" placeholder="Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060;box-sizing:border-box"/>
+        <input id="auth-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')authSubmit()" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060;box-sizing:border-box"/>
+        <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Login</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="app"></div>
 <script>
 'use strict';
+
+// ── STATIC AUTH FUNCTIONS (no innerHTML dependency) ──
+function authTab(tab){
+  var loginBtn=document.getElementById('tab-login-btn');
+  var signupBtn=document.getElementById('tab-signup-btn');
+  var submitBtn=document.getElementById('auth-submit-btn');
+  if(tab==='login'){
+    loginBtn.style.background='rgba(255,255,255,0.95)';loginBtn.style.color='#3BAA8C';
+    signupBtn.style.background='transparent';signupBtn.style.color='rgba(255,255,255,0.75)';
+    submitBtn.textContent='Login';
+  }else{
+    signupBtn.style.background='rgba(255,255,255,0.95)';signupBtn.style.color='#3BAA8C';
+    loginBtn.style.background='transparent';loginBtn.style.color='rgba(255,255,255,0.75)';
+    submitBtn.textContent='Start My Journey';
+  }
+  submitBtn.dataset.tab=tab;
+}
+function authSubmit(){
+  var btn=document.getElementById('auth-submit-btn');
+  var tab=btn.dataset.tab||'login';
+  var n=(document.getElementById('auth-name').value||'').trim();
+  var p=(document.getElementById('auth-pw').value||'');
+  if(!n||!p){alert('Please enter your name and password.');return;}
+  if(tab==='signup'){
+    if(localStorage.getItem('mf_pw_'+n)){alert('Name already taken. Please log in.');return;}
+    localStorage.setItem('mf_pw_'+n,p);
+    localStorage.setItem('mf_approved_'+n,'0');
+    var pending=JSON.parse(localStorage.getItem('mf_pending')||'[]');
+    if(pending.indexOf(n)===-1)pending.push(n);
+    localStorage.setItem('mf_pending',JSON.stringify(pending));
+    alert('Sign up complete! Please wait for coach approval.');
+    document.getElementById('auth-pw').value='';
+  }else{
+    var savedPw=localStorage.getItem('mf_pw_'+n);
+    if(!savedPw){alert('No account found. Please sign up first.');return;}
+    if(p!==savedPw){alert('Incorrect password.');return;}
+    var approved=localStorage.getItem('mf_approved_'+n);
+    if(approved==='0'){alert('Pending coach approval. Please wait.');return;}
+    document.getElementById('auth-screen').style.display='none';
+    localStorage.setItem('clientName',n);
+    if(typeof S!=='undefined'){S.clientName=n;render();}
+  }
+}
+function showAuthScreen(){
+  var sc=document.getElementById('auth-screen');
+  if(sc){sc.style.display='flex';authTab('login');}
+}
+
 
 var SHEETS='https://script.google.com/macros/s/AKfycbwhfh02uDuFnpPzoLbtrFOO-lT1DvVzwrk2Zp2ZwZ8gFpejkCyfTT5-2I2h4Q2sJXU7wg/exec';
 var CNAME='dblqwqgnz', CPRES='mindfit_posts';
@@ -552,15 +620,7 @@ function buildApp(){
     h+='</select></div>';
   }
 
-  if(mode==='client'&&!cn){
-    h+='<div style="background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.2)">';
-    h+='<p style="color:#fff;font-weight:600;margin-bottom:14px;font-family:\'DM Serif Display\',serif;font-size:18px">Welcome! Let\'s get started.</p>';
-    h+='<div style="display:flex;flex-direction:column;gap:10px">';
-    h+='<input id="reg-name" placeholder="Your Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/>';
-    h+='<input id="reg-pw" type="password" placeholder="Set a Password" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060"/>';
-    h+='<button onclick="signup()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Start My Journey</button>';
-    h+='</div></div>';
-  }
+
 
   if(mode==='client'&&cn){
     h+='<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:16px">';
@@ -680,6 +740,23 @@ function buildApp(){
 
   // ── STATS / DASHBOARD TAB ──
   if(tab==='progress'){
+    // 승인 대기 목록 (코치만)
+    if(mode==='coach'){
+      var pending=JSON.parse(localStorage.getItem('mf_pending')||'[]');
+      if(pending.length>0){
+        h+='<div style="background:#FEF3E2;border:1.5px solid #F0B86E;border-radius:16px;padding:18px;margin-bottom:20px">';
+        h+='<p style="font-weight:700;color:#C8963E;font-size:15px;margin-bottom:12px">⏳ Pending Approval ('+pending.length+')</p>';
+        pending.forEach(function(name){
+          h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(240,184,110,0.3)">';
+          h+='<span style="font-weight:600;color:#2D7060;font-size:15px">'+esc(name)+'</span>';
+          h+='<div style="display:flex;gap:8px">';
+          h+='<button onclick="approveClient(\''+esc(name)+'\')" style="padding:7px 16px;background:#3BAA8C;color:white;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">Approve</button>';
+          h+='<button onclick="rejectClient(\''+esc(name)+'\')" style="padding:7px 16px;background:#E8F8F4;color:#E05C5C;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">Reject</button>';
+          h+='</div></div>';
+        });
+        h+='</div>';
+      }
+    }
     h+='<h2 style="font-family:\'DM Serif Display\',serif;font-size:24px;color:#1A6B58;margin-bottom:6px">Feedback</h2>';
     if(mode==='coach'){
       h+='<p style="color:#5A9A8E;font-size:13px;margin-bottom:20px">'+(sc==='all'?'All clients':'Viewing: '+esc(sc))+'</p>';
@@ -1565,6 +1642,7 @@ function buildMealCard(meal,mode){
 }
 
 function attachEvents(){
+
   var cpw=document.getElementById('m-cpw');
   if(cpw){cpw.focus();cpw.onkeydown=function(e){if(e.key==='Enter')verifyCoach();};}
   var cpw2=document.getElementById('m-cpw2');
@@ -1573,8 +1651,6 @@ function attachEvents(){
   if(at)at.oninput=function(e){S.ansText=e.target.value;};
   var rn=document.getElementById('reg-name');
   if(rn){
-    rn.value=S.tmpName;
-    rn.oninput=function(e){S.tmpName=e.target.value;};
     rn.onkeydown=function(e){
       if(e.key==='Tab'||e.key==='Enter'){
         e.preventDefault();
@@ -1585,9 +1661,11 @@ function attachEvents(){
   }
   var rp=document.getElementById('reg-pw');
   if(rp){
-    rp.value=S.tmpPw;
-    rp.oninput=function(e){S.tmpPw=e.target.value;};
-    rp.onkeydown=function(e){if(e.key==='Enter')signup();};
+    rp.onkeydown=function(e){
+      if(e.key==='Enter'){
+        if(S.authTab==='signup')signup();else doLogin();
+      }
+    };
   }
   var ctcn=document.getElementById('ct-cn');
   if(ctcn){ctcn.value=S.formContract.cn;ctcn.oninput=function(e){S.formContract.cn=e.target.value;};}
@@ -1667,46 +1745,53 @@ window.verifyChange=function(){
     alert('Incorrect password');
   }
 };
+// ── AUTH ──
 window.doLogin=function(){
-  var n=(document.getElementById('reg-name')&&document.getElementById('reg-name').value.trim())||'';
-  var p=(document.getElementById('reg-pw')&&document.getElementById('reg-pw').value)||'';
-  if(!n||!p)return alert('Please enter your name and password.');
-  var savedPw=localStorage.getItem('mindfit_clientPw_'+n);
-  if(!savedPw){
-    // 구버전 호환: clientName/clientPw
-    var oldName=lsStr('clientName'), oldPw=lsStr('clientPw');
-    if(oldName===n&&oldPw===p){
-      lsSetStr('clientName',n);
-      setState({clientName:n,tmpName:'',tmpPw:''});
-    }else{
-      alert('Name or password is incorrect.');
-    }
-    return;
-  }
-  if(savedPw===p){
-    lsSetStr('clientName',n);
-    setState({clientName:n,tmpName:'',tmpPw:''});
-  }else{
-    alert('Incorrect password.');
-  }
-};
-window.confirmLogout=function(){
-  lsRm('clientName');
-  setState({clientName:'',tab:'meals',modal:'',authTab:'login',tmpName:'',tmpPw:''});
-};
-
-window.doLogout=function(){
-  setState({modal:'logout'});
+  var n=(document.getElementById('reg-name')||{}).value||'';
+  var p=(document.getElementById('reg-pw')||{}).value||'';
+  n=n.trim();
+  if(!n||!p){alert('Please enter your name and password.');return;}
+  var savedPw=localStorage.getItem('mf_pw_'+n);
+  if(!savedPw){alert('No account found. Please sign up first.');return;}
+  if(p!==savedPw){alert('Incorrect password.');return;}
+  // 승인 여부 확인
+  var approved=localStorage.getItem('mf_approved_'+n);
+  if(approved==='0'){alert('Your account is pending coach approval.');return;}
+  lsSetStr('clientName',n);
+  setState({clientName:n,tab:'meals'});
 };
 window.signup=function(){
-  var n=(document.getElementById('reg-name')&&document.getElementById('reg-name').value)||S.tmpName||'';
-  var p=(document.getElementById('reg-pw')&&document.getElementById('reg-pw').value)||S.tmpPw||'';
-  if(!n.trim()||!p.trim())return alert('Please enter your name and password.');
-  var name=n.trim(), pw=p.trim();
-  // 이름별 비밀번호 저장 (로그인 지원)
-  localStorage.setItem('mindfit_clientPw_'+name, pw);
-  lsSetStr('clientName',name);lsSetStr('clientPw',pw);
-  setState({clientName:name,tmpName:'',tmpPw:'',authTab:'login'});
+  var n=(document.getElementById('reg-name')||{}).value||'';
+  var p=(document.getElementById('reg-pw')||{}).value||'';
+  n=n.trim(); p=p.trim();
+  if(!n||!p){alert('Please enter your name and password.');return;}
+  if(localStorage.getItem('mf_pw_'+n)){alert('Name already taken. Please log in or choose a different name.');return;}
+  localStorage.setItem('mf_pw_'+n,p);
+  localStorage.setItem('mf_approved_'+n,'0'); // 0 = pending
+  // 코치에게 알림용 대기목록에 추가
+  var pending=JSON.parse(localStorage.getItem('mf_pending')||'[]');
+  if(pending.indexOf(n)===-1)pending.push(n);
+  localStorage.setItem('mf_pending',JSON.stringify(pending));
+  alert('Sign up complete! Please wait for coach approval before logging in.');
+};
+window.doLogout=function(){setState({modal:'logout'});};
+window.confirmLogout=function(){
+  lsRm('clientName');
+  setState({clientName:'',tab:'meals',modal:'',authTab:'login'});
+};
+// 코치: 회원 승인/거절
+window.approveClient=function(n){
+  localStorage.setItem('mf_approved_'+n,'1');
+  var pending=JSON.parse(localStorage.getItem('mf_pending')||'[]');
+  localStorage.setItem('mf_pending',JSON.stringify(pending.filter(function(x){return x!==n;})));
+  setState({});
+};
+window.rejectClient=function(n){
+  localStorage.removeItem('mf_pw_'+n);
+  localStorage.removeItem('mf_approved_'+n);
+  var pending=JSON.parse(localStorage.getItem('mf_pending')||'[]');
+  localStorage.setItem('mf_pending',JSON.stringify(pending.filter(function(x){return x!==n;})));
+  setState({});
 };
 window.setMT=function(v){S.formMeal.mt=v;render();};
 window.setFull=function(v){S.formMeal.full=v;render();};
@@ -1958,6 +2043,7 @@ window.showCalDay=function(date,focus){
 
 render();
 sync();
+(function(){var cn=localStorage.getItem('clientName')||'';if(!cn){showAuthScreen();}else{var sc=document.getElementById('auth-screen');if(sc)sc.style.display='none';}})();
 
 // ── PWA Service Worker ──
 if('serviceWorker' in navigator){
