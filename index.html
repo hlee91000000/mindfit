@@ -51,11 +51,12 @@ input,textarea,select{font-family:'DM Sans',sans-serif;font-size:16px}
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <input id="auth-name" placeholder="Name" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060;box-sizing:border-box"/>
-        <input id="auth-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')authSubmit()" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060;box-sizing:border-box"/>
+        <input id="auth-pw" type="password" placeholder="Password" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.92);border:none;border-radius:12px;font-size:16px;outline:none;color:#2D7060;box-sizing:border-box"/>
         <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;padding:13px;background:rgba(255,255,255,0.95);color:#3BAA8C;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Login</button>
       </div>
     </div>
     <button onclick="authCoach()" style="margin-top:18px;background:transparent;border:1.5px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;width:100%">🔑 Coach Login</button>
+    <button onclick="debugAuth()" style="margin-top:8px;background:transparent;border:none;color:rgba(255,255,255,0.4);padding:6px;font-size:11px;cursor:pointer;width:100%">debug</button>
   </div>
 </div>
 <div id="app"></div>
@@ -77,6 +78,11 @@ function authTab(tab){
     submitBtn.textContent='Start My Journey';
   }
   submitBtn.dataset.tab=tab;
+}
+function debugAuth(){
+  var all=[];
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);all.push(k+'='+localStorage.getItem(k));}
+  alert('Storage:\n'+all.join('\n'));
 }
 function authCoach(){
   var pw=prompt('Coach password:');
@@ -106,17 +112,12 @@ function authSubmit(){
     document.getElementById('auth-pw').value='';
   }else{
     var savedPw=localStorage.getItem('mf_pw_'+n);
-    // 기존 방식 호환 (clientPw로 저장된 구버전)
     if(!savedPw){
       var oldPw=localStorage.getItem('clientPw');
-      var oldName=(localStorage.getItem('clientName')||'').trim();
-      if(oldPw&&oldName===n&&p===oldPw){
-        // 새 키로 마이그레이션
+      if(oldPw&&p===oldPw){
         localStorage.setItem('mf_pw_'+n,oldPw);
         localStorage.setItem('mf_approved_'+n,'1');
         savedPw=oldPw;
-      }else if(oldPw&&oldName!==n){
-        alert('Name not found. Did you mean "'+oldName+'"?');return;
       }else{
         alert('No account found. Please sign up first.');return;
       }
@@ -131,7 +132,16 @@ function authSubmit(){
 }
 function showAuthScreen(){
   var sc=document.getElementById('auth-screen');
-  if(sc){sc.style.display='flex';authTab('login');}
+  if(sc){
+    sc.style.display='flex';
+    authTab('login');
+    setTimeout(function(){
+      var pw=document.getElementById('auth-pw');
+      var nm=document.getElementById('auth-name');
+      if(pw)pw.onkeydown=function(e){if(e.key==='Enter')authSubmit();};
+      if(nm)nm.onkeydown=function(e){if(e.key==='Enter'){var p=document.getElementById('auth-pw');if(p)p.focus();}};
+    },50);
+  }
 }
 
 
@@ -1802,8 +1812,15 @@ window.signup=function(){
 };
 window.doLogout=function(){setState({modal:'logout'});};
 window.confirmLogout=function(){
+  var name=localStorage.getItem('clientName')||'';
+  var oldPw=localStorage.getItem('clientPw')||'';
+  if(name&&oldPw&&!localStorage.getItem('mf_pw_'+name)){
+    localStorage.setItem('mf_pw_'+name,oldPw);
+    localStorage.setItem('mf_approved_'+name,'1');
+  }
   lsRm('clientName');
-  setState({clientName:'',tab:'meals',modal:'',authTab:'login'});
+  setState({clientName:'',tab:'meals',modal:''});
+  showAuthScreen();
 };
 // 코치: 회원 승인/거절
 window.approveClient=function(n){
