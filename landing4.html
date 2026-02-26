@@ -224,10 +224,10 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
   </div>
   <div class="hook-body">
     <div class="eyebrow">Pilot Programme — Limited Spots</div>
-    <h1 class="hook-h1"><em>Eating less,</em><br/>still gaining weight —<br/>or <strong>bingeing</strong> again?</h1>
+    <h1 class="hook-h1"><em>Still gaining weight</em><br/>no matter how<br/><strong>little you eat?</strong></h1>
     <p class="hook-p">You already know what you "should" do.<br/>So why isn't it working?</p>
     <p class="hook-sub-text">Your body isn't broken. Dieting did this. Years of low-calorie restriction slow your metabolism and create the binge–restrict cycle. This isn't a willpower problem — it's your body trying to survive.</p>
-    <button class="hook-cta" onclick="startQuiz()">Take the 2-min quiz →</button>
+    <button class="hook-cta" onclick="gtag('event','quiz_start');startQuiz()">Take the 2-min quiz →</button>
     <p class="no-pressure">🔒 Anonymous · No sign-up · 2 minutes</p>
     <button class="hook-learn" onclick="goInfo()">Learn more about the programme</button>
   </div>
@@ -309,7 +309,7 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
     </div>
   </div>
   <div class="r-cta">
-    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary"><span>✦</span> Book a Free Chat</a>
+    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary" onclick="gtag('event','cta_click')"><span>✦</span> Book a Free Chat</a>
     <p class="btn-no-judge">No sales pitch. No judgment. Just 10 minutes.</p>
     <a href="https://www.instagram.com/mindfit_00" target="_blank" class="btn-ig">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -486,7 +486,7 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
   <div class="info-cta">
     <h2>Just have<br/><em>a chat.</em></h2>
     <p>Free. 10 minutes. No commitment.<br/>No sales pitch. No judgment.</p>
-    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary-white"><span style="color:var(--gold);">✦</span> Book a Free Chat</a>
+    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary-white" onclick="gtag('event','cta_click')"><span style="color:var(--gold);">✦</span> Book a Free Chat</a>
     <a href="https://www.instagram.com/mindfit_00" target="_blank" class="ig-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
       @mindfit_00
@@ -595,6 +595,7 @@ function nextQ(){
 }
 
 function showResult(){
+  gtag('event','quiz_complete');
   var total=scores.reduce(function(a,b){return a+b;},0);
   var headline,matchPct;
   if(total>=11){
