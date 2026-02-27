@@ -224,11 +224,10 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
   </div>
   <div class="hook-body">
     <div class="eyebrow">Pilot Programme — Limited Spots</div>
-    <h1 class="hook-h1"><em>Still gaining weight</em><br/>no matter how<br/><strong>little you eat?</strong></h1>
-    <p class="hook-p">You already know what you "should" do.<br/>So why isn't it working?</p>
-    <p class="hook-sub-text">Your body isn't broken. Dieting did this. Years of low-calorie restriction slow your metabolism and create the binge–restrict cycle. This isn't a willpower problem — it's your body trying to survive.</p>
-    <button class="hook-cta" onclick="gtag('event','quiz_start');startQuiz()">Take the 2-min quiz →</button>
-    <p class="no-pressure">🔒 Anonymous · No sign-up · 2 minutes</p>
+    <h1 class="hook-h1">"You eat so little.<br/><em>Yet nothing</em><br/><strong>changes."</strong></h1>
+    <p class="hook-p">Your metabolism is broken — not you.</p>
+    <button class="hook-cta" onclick="gtag('event','quiz_start');startQuiz()">Check my metabolism score →</button>
+    <p class="no-pressure">2 min · Anonymous · No sign-up</p>
     <button class="hook-learn" onclick="goInfo()">Learn more about the programme</button>
   </div>
   <div class="hook-bottom">
@@ -264,12 +263,13 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
 <!-- ══ RESULT ══ -->
 <div class="page" id="page-result">
   <div class="result-header">
-    <div class="r-tag"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;"></span> Your Result</div>
+    <div class="r-tag"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;"></span> Metabolism Score</div>
     <div class="r-headline" id="r-headline"></div>
     <div class="r-match">
       <div class="r-bar-wrap"><div class="r-bar" id="r-bar"></div></div>
       <span class="r-pct" id="r-pct"></span>
     </div>
+    <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.3);font-style:italic;">Based on your answers</div>
   </div>
   <div class="r-body">
     <div class="r-stats">
@@ -527,35 +527,35 @@ function showHook(){showPage('page-hook');}
 
 // ── 퀴즈 ──
 var QS=[
-  {q:"Which of these feels most like you right now?",r:"No right or wrong answers — just be honest with yourself.",opts:[
-    {t:"Food feels like the enemy. I'm scared to eat in case I gain weight",s:3},
-    {t:"I restrict, then binge, then restrict again — the cycle won't stop",s:3},
-    {t:"My eating is inconsistent — I can't seem to stay on track",s:2},
-    {t:"I want to eat healthier but don't know where to start",s:1}
+  {q:"How much are you eating daily?",r:"No right or wrong answers — just be honest with yourself.",opts:[
+    {t:"Very little — under 1,200 calories, but still not losing weight",s:3},
+    {t:"I restrict then binge, so it varies a lot",s:3},
+    {t:"A normal amount, but I'm still gaining weight",s:2},
+    {t:"I've lost track — years of dieting confused me",s:2}
   ]},
-  {q:"How long have you been fighting this?",r:"So many people have been in this cycle for years. You're not alone.",opts:[
-    {t:"Years — I've tried everything and always end up back here",s:3},
-    {t:"1–2 years — some progress, but I keep relapsing",s:2},
-    {t:"A few months — I'm starting to notice patterns",s:1},
-    {t:"Not that long — I'm catching it early",s:1}
+  {q:"How's your energy throughout the day?",r:"Your energy levels are one of the clearest signs of your metabolism.",opts:[
+    {t:"Always exhausted, even after a full night's sleep",s:3},
+    {t:"Energy crashes after meals — I feel heavy and sluggish",s:3},
+    {t:"Up and down — completely unpredictable",s:2},
+    {t:"Fine, but my weight still won't budge no matter what",s:2}
   ]},
-  {q:"Which of these hits closest to home?",r:"If even one of these sounds familiar — you're not the only one.",opts:[
-    {t:"I eat so little, but still gain weight. My metabolism feels broken",s:3},
-    {t:"I can't trust myself around food. I'm afraid of losing control",s:3},
-    {t:"I know what to do — I just can't make myself do it consistently",s:2},
-    {t:"Emotions or stress often drive my eating more than hunger",s:2}
+  {q:"What happens when you eat less?",r:"This is one of the most telling signs of metabolic adaptation.",opts:[
+    {t:"I lose a little, then gain it all back faster than before",s:3},
+    {t:"I get so hungry I end up overeating anyway",s:3},
+    {t:"Absolutely nothing changes",s:2},
+    {t:"I feel weak and irritable but still don't lose weight",s:2}
   ]},
-  {q:"After a binge, what usually happens?",r:"If this question feels uncomfortable — that's already important information.",opts:[
-    {t:"I immediately restrict or over-exercise to 'make up for it'",s:3},
-    {t:"I spiral into guilt and tell myself I'll start over tomorrow",s:3},
-    {t:"I don't really binge — that's not my pattern",s:1},
-    {t:"It happens occasionally but I don't tend to compensate",s:2}
+  {q:"How long have you been dieting?",r:"The longer the cycle, the more your metabolism has adapted.",opts:[
+    {t:"Years — I've tried every diet out there",s:3},
+    {t:"On and off my whole life",s:3},
+    {t:"1–2 years, going in circles",s:2},
+    {t:"A few months — but already feeling stuck",s:1}
   ]},
-  {q:"What would change everything for you?",r:"Almost there — last one.",opts:[
-    {t:"Being able to eat without fear, guilt, or obsession",s:3},
-    {t:"Breaking free from the binge–restrict cycle for good",s:3},
-    {t:"Restoring my metabolism so I can eat normally without gaining weight",s:2},
-    {t:"Building sustainable habits I can actually maintain long-term",s:2}
+  {q:"What does your body feel like right now?",r:"Almost there — last one.",opts:[
+    {t:"Stuck — like it's working against me no matter what I do",s:3},
+    {t:"Like I've broken it with years of dieting",s:3},
+    {t:"Tired and inflamed all the time",s:2},
+    {t:"Out of control — I can't trust it anymore",s:2}
   ]}
 ];
 
@@ -609,7 +609,7 @@ function showResult(){
     headline="A strong<br/><em>foundation</em><br/>starts here.";
   }
   document.getElementById('r-headline').innerHTML=headline;
-  document.getElementById('r-pct').textContent=matchPct+'% programme fit';
+  document.getElementById('r-pct').textContent='Score: '+matchPct+'/100';
   showPage('page-result');
   setTimeout(function(){document.getElementById('r-bar').style.width=matchPct+'%';},300);
 }
