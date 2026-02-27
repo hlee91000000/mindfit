@@ -265,11 +265,11 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
   <div class="result-header">
     <div class="r-tag"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;"></span> Metabolism Score</div>
     <div class="r-headline" id="r-headline"></div>
-    <div class="r-match">
-      <div class="r-bar-wrap"><div class="r-bar" id="r-bar"></div></div>
-      <span class="r-pct" id="r-pct"></span>
+    <div style="margin-top:16px;">
+      <div id="r-pct" style="font-family:'Cormorant Garamond',serif;font-size:clamp(52px,14vw,80px);font-weight:300;color:#fff;line-height:1;margin-bottom:4px;"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:12px;">out of 100 · Based on your answers</div>
+      <div class="r-bar-wrap" style="width:100%;max-width:240px;"><div class="r-bar" id="r-bar"></div></div>
     </div>
-    <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.3);font-style:italic;">Based on your answers</div>
   </div>
   <div class="r-body">
     <div class="r-stats">
@@ -599,17 +599,17 @@ function showResult(){
   var total=scores.reduce(function(a,b){return a+b;},0);
   var headline,matchPct;
   if(total>=11){
-    matchPct=Math.min(95,80+Math.floor(Math.random()*14));
-    headline="<em>You\'ve been</em><br/><strong>fighting this</strong><br/>long enough.";
+    matchPct=Math.max(18,32-Math.floor(Math.random()*12));
+    headline="<em>Your metabolism</em><br/>has been through<br/><strong>a lot.</strong>";
   }else if(total>=7){
-    matchPct=Math.min(88,72+Math.floor(Math.random()*14));
-    headline="You\'re close —<br/><em>the right support</em><br/>changes everything.";
+    matchPct=Math.max(38,52-Math.floor(Math.random()*12));
+    headline="<em>Your metabolism</em><br/>is showing signs<br/><strong>of strain.</strong>";
   }else{
-    matchPct=Math.min(78,60+Math.floor(Math.random()*16));
-    headline="A strong<br/><em>foundation</em><br/>starts here.";
+    matchPct=Math.max(58,72-Math.floor(Math.random()*12));
+    headline="Your metabolism<br/><em>has some room</em><br/>to recover.";
   }
   document.getElementById('r-headline').innerHTML=headline;
-  document.getElementById('r-pct').textContent='Score: '+matchPct+'/100';
+  document.getElementById('r-pct').textContent=matchPct+'/100';
   showPage('page-result');
   setTimeout(function(){document.getElementById('r-bar').style.width=matchPct+'%';},300);
 }
