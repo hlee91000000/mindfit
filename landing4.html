@@ -75,6 +75,7 @@ body{font-family:"DM Sans",sans-serif;color:var(--text);background:var(--deep);m
 #page-loading{background:var(--deep);align-items:center;justify-content:center;}
 .loading-ring{width:60px;height:60px;border:2px solid rgba(58,170,140,0.15);border-top-color:var(--light);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 24px;}
 @keyframes spin{to{transform:rotate(360deg);}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
 .loading-text{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:300;color:#fff;text-align:center;margin-bottom:8px;}
 .loading-sub{font-size:13px;color:rgba(255,255,255,0.3);font-style:italic;text-align:center;}
 
@@ -304,12 +305,14 @@ footer p{font-size:11px;color:rgba(255,255,255,0.18);}
           <span class="r-price-main">S$2,000</span>
           <span class="r-price-badge">PILOT</span>
         </div>
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-top:6px;animation:blink 1.4s ease-in-out infinite;">🔴 3 spots remaining</div>
       </div>
       <button class="see-details-btn" onclick="goInfo()">See details →</button>
     </div>
   </div>
   <div class="r-cta">
-    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary" onclick="gtag('event','cta_click')"><span>✦</span> Book a Free Chat</a>
+    <p style="font-size:16px;color:var(--mid);font-weight:700;margin-bottom:14px;text-align:center;line-height:1.5;">⚠️ Your score suggests<br/>your metabolism needs attention.</p>
+    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary" onclick="gtag('event','cta_click')"><span>✦</span> Book My Free Chat →</a>
     <p class="btn-no-judge">No sales pitch. No judgment. Just 10 minutes.</p>
     <a href="https://www.instagram.com/mindfit_00" target="_blank" class="btn-ig">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
