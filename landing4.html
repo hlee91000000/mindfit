@@ -82,9 +82,9 @@ body{font-family:"DM Sans",sans-serif;color:var(--text);background:var(--deep);m
 
 /* ── RESULT ── */
 #page-result{background:var(--cream);}
-.result-header{background:var(--deep);padding:44px 24px 52px;position:relative;overflow:hidden;}
+.result-header{background:var(--deep);padding:44px 24px 40px;position:relative;overflow:hidden;}
 .result-header::before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(58,170,140,0.1) 0%,transparent 70%);}
-.result-header::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:40px;overflow:hidden;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,40 Q200,0 400,40' fill='%23FAF8F4'/%3E%3C/svg%3E") no-repeat bottom/cover;}
+
 .r-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:22px;}
 .r-headline{font-family:"Cormorant Garamond",serif;font-size:clamp(32px,8vw,48px);font-weight:300;color:#fff;line-height:1.1;margin-bottom:18px;position:relative;z-index:1;}
 .r-headline em{font-style:italic;}
@@ -104,13 +104,13 @@ body{font-family:"DM Sans",sans-serif;color:var(--text);background:var(--deep);m
 .r-stat-desc{font-size:12px;color:var(--muted);line-height:1.6;}
 
 /* imagine */
-.r-imagine{background:var(--deep);padding:36px 24px 40px;position:relative;overflow:hidden;}
-.r-imagine::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(58,170,140,0.07) 0%,transparent 60%);}
-.r-imagine-line{width:28px;height:1px;background:var(--gold);opacity:0.4;margin-bottom:18px;}
+.r-imagine{background:var(--warm);padding:36px 24px 40px;position:relative;overflow:hidden;}
+
+.r-imagine-line{width:28px;height:1px;background:var(--gold);opacity:0.6;margin-bottom:18px;}
 .r-imagine-h{font-family:"Cormorant Garamond",serif;font-size:clamp(30px,7vw,44px);font-weight:300;color:#fff;line-height:1.2;margin-bottom:6px;position:relative;}
 .r-imagine-h2{font-family:"Cormorant Garamond",serif;font-size:clamp(30px,7vw,44px);font-style:italic;font-weight:300;color:rgba(255,255,255,0.4);line-height:1.2;margin-bottom:24px;position:relative;}
-.r-imagine-divider{width:100%;height:1px;background:rgba(255,255,255,0.06);margin-bottom:18px;}
-.r-imagine-sub{font-size:13px;color:rgba(255,255,255,0.28);line-height:1.9;}
+.r-imagine-divider{width:100%;height:1px;background:rgba(11,61,46,0.08);margin-bottom:18px;}
+.r-imagine-sub{font-size:13px;color:var(--muted);line-height:1.9;}
 
 /* price hint */
 .r-price-hint{background:var(--warm);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
@@ -247,7 +247,7 @@ src="https://www.facebook.com/tr?id=2692388194481389&ev=PageView&noscript=1"
     <p class="hook-p">Your metabolism is broken — not you.</p>
     <button class="hook-cta" onclick="gtag('event','quiz_start');startQuiz()">Check my metabolism score →</button>
     <p class="no-pressure">Anonymous · No sign-up</p>
-    <button class="hook-learn" onclick="goInfo()">Learn more about the programme</button>
+    <button class="hook-learn" onclick="gtag('event','learn_more_click');goInfo()">Learn more about the programme</button>
   </div>
   <div class="hook-bottom">
     <div class="sp-text"><strong>Founding client spots open</strong><br/>Pilot pricing — 2–3 spots remaining</div>
@@ -288,44 +288,39 @@ src="https://www.facebook.com/tr?id=2692388194481389&ev=PageView&noscript=1"
       <div id="r-pct" style="font-family:'Cormorant Garamond',serif;font-size:clamp(52px,14vw,80px);font-weight:300;color:#fff;line-height:1;margin-bottom:4px;"></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:12px;">out of 100 · Based on your answers</div>
       <div class="r-bar-wrap" style="width:100%;max-width:240px;"><div class="r-bar" id="r-bar"></div></div>
-      <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.6;margin-top:16px;">This cycle doesn't break itself.<br/>How long are you willing to wait?</div>
+      <div style="margin-top:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 18px;text-align:left;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;font-weight:300;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:10px;">"Your willpower is not the problem. The system is."</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--mid);overflow:hidden;flex-shrink:0;"><img src="data:image/png;base64,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" style="width:100%;height:100%;object-fit:cover;object-position:top;" alt="Lea"/></div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#fff;">Lea</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);">MindFit Coach</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.6;margin-top:20px;">This cycle doesn't break itself.<br/>How long are you willing to wait?</div>
     </div>
   </div>
-  <div class="r-body">
-    <div class="r-stats">
-      <div class="r-stat-label">With MindFit — what changes</div>
-      <div class="r-stat-card">
-        <div class="r-stat-arrow">↑</div>
-        <div>
-          <div class="r-stat-title">Your metabolism resets, and weight drops naturally — Eating more without gaining weight</div>
-          <div class="r-stat-desc">Weight drops as a side effect, not the goal.</div>
-        </div>
-      </div>
-      <div class="r-stat-card">
-        <div class="r-stat-arrow">↓</div>
-        <div>
-          <div class="r-stat-title">Bingeing 2–3x a week → once a month</div>
-          <div class="r-stat-desc">The urge doesn't vanish overnight — but it does vanish.</div>
-        </div>
-      </div>
-    </div>
-    <div class="r-imagine">
+  <div class="r-imagine">
       <div class="r-imagine-line"></div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(42px,11vw,64px);font-weight:300;color:#fff;line-height:1.05;margin-bottom:4px;position:relative;">Eating what<br/>you want.</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(42px,11vw,64px);font-style:italic;font-weight:300;color:var(--gold-light);line-height:1.05;margin-bottom:28px;position:relative;">Losing weight<br/>anyway.</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,40px);font-weight:300;color:var(--deep);line-height:1.05;margin-bottom:4px;position:relative;">Eating what<br/>you want.</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,40px);font-style:italic;font-weight:300;color:var(--mid);line-height:1.05;margin-bottom:28px;position:relative;">Losing weight<br/>anyway.</div>
       <div class="r-imagine-divider"></div>
       <div class="r-imagine-sub">No restriction &nbsp;·&nbsp; No guilt &nbsp;·&nbsp; No obsession</div>
     </div>
-
-  </div>
   <div class="r-cta">
+    <div style="background:#fff;border:1.5px solid rgba(26,107,88,0.1);border-radius:18px;padding:20px 20px 20px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--deep);line-height:1.35;margin-bottom:6px;">Want to understand<br/><em>what's actually happening?</em></div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px;">Learn how MindFit works — and what's included in the programme.</div>
+      <button class="btn-primary" onclick="gtag('event','learn_more_click');goInfo()" style="background:var(--mid);font-size:15px;padding:18px;"><span>✦</span> Learn more about the programme →</button>
+    </div>
+    <p style="text-align:center;font-size:12px;color:rgba(90,122,106,0.5);margin:8px 0 4px;">— or if you're ready —</p>
     <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary" onclick="gtag('event','cta_click')"><span>✦</span> Book My Free Chat →</a>
-    <p class="btn-no-judge">No sales pitch. No judgment. Just 10 minutes.</p>
     <a href="https://www.instagram.com/mindfit_00" target="_blank" class="btn-ig">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
       DM on Instagram
     </a>
-    <button class="btn-learn" onclick="goInfo()">Learn more about the programme →</button>
+    <p class="btn-no-judge">No sales pitch. No judgment. Just 10 minutes.</p>
   </div>
   <div class="r-footer">
     <p>Free, no commitment.<br/>Just a real conversation to see if we're a good fit.</p>
@@ -354,7 +349,7 @@ src="https://www.facebook.com/tr?id=2692388194481389&ev=PageView&noscript=1"
 
   <!-- Problem -->
   <div class="i-sec">
-    <div class="i-label">The Approach</div>
+    <div class="i-label">The Approach — Online Coaching</div>
     <h2 class="i-h">MindFit resets<br/><em>the whole system.</em></h2>
     <p class="i-p" style="margin-bottom:14px;">Not just your food choices.</p>
     <p class="i-p"><strong>Just eat what you want — and your weight will drop.</strong> Your metabolism recovers, cravings settle, and weight drops naturally. No calorie counting. No off-limits foods.</p>
@@ -554,7 +549,7 @@ document.getElementById('carousel').addEventListener('touchend',function(e){
   <div class="info-cta">
     <h2>Just have<br/><em>a chat.</em></h2>
     <p>Free. 10 minutes. No commitment.<br/>No sales pitch. No judgment.</p>
-    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary-white" onclick="gtag('event','cta_click')"><span style="color:var(--gold);">✦</span> Book a Free Chat</a>
+    <a href="https://forms.gle/mMaKp8HMKhKp5ggs7" target="_blank" class="btn-primary-white" onclick="gtag('event','info_cta_click')"><span style="color:var(--gold);">✦</span> Book a Free Chat</a>
     <a href="https://www.instagram.com/mindfit_00" target="_blank" class="ig-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
       @mindfit_00
@@ -607,19 +602,13 @@ var QS=[
     {t:"Up and down — completely unpredictable",s:2},
     {t:"Fine, but my weight still won't budge no matter what",s:2}
   ]},
-  {q:"What happens when you eat less?",r:"This is one of the most telling signs of metabolic adaptation.",opts:[
-    {t:"I lose a little, then gain it all back faster than before",s:3},
-    {t:"I get so hungry I end up overeating anyway",s:3},
-    {t:"Absolutely nothing changes",s:2},
-    {t:"I feel weak and irritable but still don't lose weight",s:2}
-  ]},
   {q:"How long have you been dieting?",r:"The longer the cycle, the more your metabolism has adapted.",opts:[
     {t:"Years — I've tried every diet out there",s:3},
     {t:"On and off my whole life",s:3},
     {t:"1–2 years, going in circles",s:2},
     {t:"A few months — but already feeling stuck",s:1}
   ]},
-  {q:"What does your body feel like right now?",r:"Almost there — last one.",opts:[
+  {q:"What does your body feel like right now?",r:"Last one — almost there.",opts:[
     {t:"Stuck — like it's working against me no matter what I do",s:3},
     {t:"Like I've broken it with years of dieting",s:3},
     {t:"Tired and inflamed all the time",s:2},
@@ -666,14 +655,14 @@ function showResult(){
   gtag('event','quiz_complete');
   var total=scores.reduce(function(a,b){return a+b;},0);
   var headline,matchPct;
-  if(total>=11){
-    matchPct=Math.max(18,32-Math.floor(Math.random()*12));
+  if(total>=10){
+    matchPct=Math.max(24,38-Math.floor(Math.random()*12));
     headline="<em>Your metabolism</em><br/>has been through<br/><strong>a lot.</strong>";
-  }else if(total>=7){
-    matchPct=Math.max(38,52-Math.floor(Math.random()*12));
+  }else if(total>=6){
+    matchPct=Math.max(45,58-Math.floor(Math.random()*12));
     headline="<em>Your metabolism</em><br/>is showing signs<br/><strong>of strain.</strong>";
   }else{
-    matchPct=Math.max(58,72-Math.floor(Math.random()*12));
+    matchPct=Math.max(62,76-Math.floor(Math.random()*12));
     headline="Your metabolism<br/><em>has some room</em><br/>to recover.";
   }
   document.getElementById('r-headline').innerHTML=headline;
