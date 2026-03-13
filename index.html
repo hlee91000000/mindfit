@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="color-scheme" content="light"/>
 <meta name="theme-color" content="#3BAA8C"/>
@@ -106,70 +106,6 @@ function debugAuth(){
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);all.push(k+'='+localStorage.getItem(k));}
   alert('Storage:\n'+all.join('\n'));
 }
-function authCoach(){
-  var pw=prompt('Coach password:');
-  if(!pw)return;
-  var CPW='9324';
-  if(pw===CPW){
-    document.getElementById('auth-screen').style.display='none';
-    if(typeof S!=='undefined'){S.mode='coach';S.clientName='coach';render();}
-  }else{
-    alert('Incorrect coach password.');
-  }
-}
-function authSubmit(){
-  var n=(document.getElementById('auth-name').value||'').trim();
-  var p=(document.getElementById('auth-pw').value||'').trim();
-  var btn=document.getElementById('auth-submit-btn');
-  var tab=btn?btn.dataset.tab||'login':'login';
-  if(!n){alert('Please enter your name.');return;}
-
-  if(tab==='signup'){
-    if(!p){alert('Please enter a password.');return;}
-    if(localStorage.getItem('mf_pw_'+n)){alert('Name already taken.');return;}
-    localStorage.setItem('mf_pw_'+n,p);
-    localStorage.setItem('mf_ok_'+n,'0');
-    var pend=JSON.parse(localStorage.getItem('mf_pend')||'[]');
-    if(pend.indexOf(n)<0)pend.push(n);
-    localStorage.setItem('mf_pend',JSON.stringify(pend));
-    alert('Signed up! Waiting for coach approval.');
-    document.getElementById('auth-pw').value='';
-    return;
-  }
-
-  // LOGIN
-  var saved=localStorage.getItem('mf_pw_'+n);
-
-  // 비번이 저장돼 있으면 확인
-  if(saved){
-    if(!p){alert('Please enter your password.');return;}
-    if(p!==saved){alert('Incorrect password.');return;}
-    var ok=localStorage.getItem('mf_ok_'+n);
-    if(ok==='0'){alert('Waiting for coach approval.');return;}
-  } else {
-    // 비번 없는 기존 회원 - meals나 journals에 이름이 있으면 허용
-    var meals=JSON.parse(localStorage.getItem('meals')||'[]');
-    var journals=JSON.parse(localStorage.getItem('journals')||'[]');
-    var exists=meals.some(function(m){return(m.clientName||'').toLowerCase()===n.toLowerCase();})
-              ||journals.some(function(j){return(j.clientName||'').toLowerCase()===n.toLowerCase();});
-    if(!exists){alert('No account found. Please sign up first.');return;}
-    // 비번 새로 등록
-    if(p){localStorage.setItem('mf_pw_'+n,p);}
-    localStorage.setItem('mf_ok_'+n,'1');
-  }
-
-  // 로그인 성공
-  // 이름을 실제 저장된 케이스로 맞추기
-  var meals2=JSON.parse(localStorage.getItem('meals')||'[]');
-  var realName=n;
-  for(var i=0;i<meals2.length;i++){
-    if((meals2[i].clientName||'').toLowerCase()===n.toLowerCase()){realName=meals2[i].clientName;break;}
-  }
-  localStorage.setItem('clientName',realName);
-  document.getElementById('auth-screen').style.display='none';
-  if(typeof S!=='undefined'&&typeof render==='function'){S.clientName=realName;render();}
-}
-
 function authCoach(){
   var pw=prompt('Coach password:');
   if(!pw)return;
