@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Seoul Curator</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --cream: #F5F1EB;
@@ -25,7 +25,7 @@
   /* NAV */
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; transition: all 0.4s; }
   nav.scrolled { background: rgba(245,241,235,0.97); backdrop-filter: blur(12px); padding: 14px 24px; border-bottom: 1px solid var(--sand); }
-  .logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown); text-decoration: none; }
+  .logo { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; color: var(--brown); text-decoration: none; }
   .logo em { font-style: italic; color: var(--mocha); }
   .nav-btn { border: 1.5px solid var(--brown); color: var(--brown); padding: 9px 18px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; transition: all 0.3s; font-weight: 500; }
   .nav-btn:hover { background: var(--brown); color: var(--cream); }
@@ -35,7 +35,7 @@
   .hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(166,124,109,0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
   .hero::after { content: ''; position: absolute; bottom: -60px; left: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(230,221,208,0.6) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
   .hero-eyebrow { font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mocha); margin-bottom: 24px; font-weight: 500; opacity: 0; animation: fadeUp 0.8s 0.2s forwards; }
-  .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(48px, 12vw, 80px); font-weight: 400; line-height: 1.05; color: var(--brown); margin-bottom: 24px; opacity: 0; animation: fadeUp 0.8s 0.4s forwards; }
+  .hero-title { font-family: 'Fraunces', serif; font-size: clamp(48px, 12vw, 80px); font-weight: 700; line-height: 1.05; color: var(--brown); margin-bottom: 24px; opacity: 0; animation: fadeUp 0.8s 0.4s forwards; }
   .hero-title em { font-style: italic; color: var(--terracotta); }
   .hero-sub { font-size: 16px; line-height: 1.85; color: var(--text-mid); max-width: 480px; margin-bottom: 40px; opacity: 0; animation: fadeUp 0.8s 0.6s forwards; }
   .hero-sub strong { color: var(--text); font-weight: 500; }
@@ -54,14 +54,14 @@
   /* SECTION COMMONS */
   section { padding: 80px 24px; }
   .section-label { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mocha); margin-bottom: 16px; font-weight: 500; }
-  .section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(34px, 8vw, 52px); font-weight: 400; line-height: 1.1; margin-bottom: 24px; color: var(--brown); }
+  .section-title { font-family: 'Fraunces', serif; font-size: clamp(34px, 8vw, 52px); font-weight: 600; line-height: 1.1; margin-bottom: 24px; color: var(--brown); }
   .section-title em { font-style: italic; color: var(--terracotta); }
 
   /* PROBLEM */
   .problem { background: var(--warm-white); }
   .prob-list { display: flex; flex-direction: column; margin-top: 36px; }
   .prob-item { padding: 28px 0; border-top: 1px solid var(--sand); display: flex; gap: 20px; }
-  .prob-num { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--mocha); flex-shrink: 0; margin-top: 3px; font-weight: 500; }
+  .prob-num { font-family: 'Fraunces', serif; font-size: 15px; color: var(--mocha); flex-shrink: 0; margin-top: 3px; font-weight: 500; }
   .prob-title { font-size: 16px; font-weight: 500; margin-bottom: 8px; color: var(--brown); }
   .prob-text { font-size: 16px; color: var(--text-mid); line-height: 1.8; }
 
@@ -73,11 +73,11 @@
   .what-intro { font-size: 17px; line-height: 1.85; color: var(--text-mid); margin-bottom: 36px; }
   .what-steps { display: flex; flex-direction: column; margin-bottom: 48px; }
   .what-step { padding: 28px 0; border-top: 1.5px solid var(--mocha-dark); display: flex; gap: 20px; opacity: 0.9; }
-  .step-n { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--warm-white); background: var(--mocha-dark); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 500; }
+  .step-n { font-family: 'Fraunces', serif; font-size: 13px; color: var(--warm-white); background: var(--mocha-dark); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 500; }
   .step-title { font-size: 17px; color: var(--brown); margin-bottom: 8px; font-weight: 500; }
   .step-text { font-size: 16px; color: var(--text-mid); line-height: 1.8; padding-top: 2px; }
   .what-quote-wrap { background: var(--warm-white); border: 1px solid var(--beige); padding: 40px 32px; }
-  .what-quote { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-style: italic; line-height: 1.6; color: var(--brown); margin-bottom: 24px; }
+  .what-quote { font-family: 'DM Sans', sans-serif; font-size: 18px; font-style: normal; line-height: 1.75; color: var(--brown); margin-bottom: 24px; }
   .what-author { font-size: 13px; color: var(--mocha-dark); letter-spacing: 0.08em; font-weight: 500; }
 
   /* WHO */
@@ -93,11 +93,11 @@
   .pkg-card { background: var(--warm-white); padding: 40px 32px; }
   .pkg-card.featured { background: var(--brown); }
   .pkg-badge { display: inline-block; border: 1px solid var(--mocha); color: var(--mocha); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; padding: 4px 12px; margin-bottom: 14px; font-weight: 500; }
-  .pkg-name { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 400; color: var(--brown); margin-bottom: 4px; }
+  .pkg-name { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 400; color: var(--brown); margin-bottom: 4px; }
   .pkg-card.featured .pkg-name { color: var(--cream); }
   .pkg-sub { font-size: 13px; letter-spacing: 0.08em; color: var(--text-light); text-transform: uppercase; margin-bottom: 24px; font-weight: 500; }
   .pkg-card.featured .pkg-sub { color: var(--mocha); }
-  .pkg-price { font-family: 'Cormorant Garamond', serif; font-size: 60px; font-weight: 400; color: var(--brown); line-height: 1; }
+  .pkg-price { font-family: 'Fraunces', serif; font-size: 60px; font-weight: 400; color: var(--brown); line-height: 1; }
   .pkg-card.featured .pkg-price { color: var(--cream); }
   .pkg-price sup { font-size: 24px; vertical-align: top; margin-top: 10px; display: inline-block; }
   .pkg-note { font-size: 13px; color: var(--text-light); margin-bottom: 28px; margin-top: 4px; }
@@ -120,7 +120,7 @@
   .cta::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 500px; height: 500px; background: radial-gradient(circle, rgba(245,241,235,0.06) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
   .cta-inner { position: relative; z-index: 1; }
   .cta .section-label { color: var(--mocha); }
-  .cta-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(38px, 10vw, 62px); font-weight: 400; color: var(--cream); line-height: 1.08; margin-bottom: 20px; }
+  .cta-title { font-family: 'Fraunces', serif; font-size: clamp(38px, 10vw, 62px); font-weight: 400; color: var(--cream); line-height: 1.08; margin-bottom: 20px; }
   .cta-title em { font-style: italic; color: rgba(245,241,235,0.75); }
   .cta-text { font-size: 17px; color: rgba(245,241,235,0.6); margin-bottom: 40px; line-height: 1.85; }
   .cta .btn-primary { background: var(--cream); color: var(--brown); display: block; }
@@ -129,7 +129,7 @@
 
   /* FOOTER */
   footer { background: var(--brown); padding: 36px 24px; display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; }
-  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--cream); }
+  .footer-logo { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; color: var(--cream); }
   .footer-logo em { font-style: italic; color: var(--mocha); }
   .footer-text { font-size: 12px; color: rgba(245,241,235,0.3); }
   .footer-links { display: flex; gap: 24px; list-style: none; }
@@ -171,7 +171,7 @@
     .hero::before { width: 500px; height: 500px; top: -100px; right: -100px; }
     .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
     .hero-stat { background: var(--sand); padding: 32px 28px; }
-    .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 400; line-height: 1; margin-bottom: 10px; color: var(--brown); }
+    .stat-num { font-family: 'Fraunces', serif; font-size: 44px; font-weight: 400; line-height: 1; margin-bottom: 10px; color: var(--brown); }
     .stat-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-light); font-weight: 500; }
     .problem-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
     .prob-list { margin-top: 0; }
@@ -186,7 +186,7 @@
 <body>
 
 <nav id="nav">
-  <a href="#" class="logo">The Seoul <em>Curator</em></a>
+  <a href="#" class="logo">The Seoul Curator</a>
   <a href="https://wa.me/821012345678" class="nav-btn">Contact via WhatsApp</a>
 </nav>
 
@@ -194,7 +194,7 @@
 <section class="hero">
   <div class="hero-content">
     <p class="hero-eyebrow">Seoul · Singapore · Hong Kong</p>
-    <h1 class="hero-title">Find the face<br>you've always<br><em>imagined.</em></h1>
+    <h1 class="hero-title">Find the face<br>you've always<br>imagined.</h1>
     <p class="hero-sub">Not just a booking service. A <strong>style curator</strong> — helping you define exactly what you want, find the right clinic in Seoul, and make sure it's communicated perfectly in Korean.</p>
     <div class="hero-btns">
       <a href="https://wa.me/821012345678" class="btn-primary">Start a Free Chat</a>
@@ -265,19 +265,19 @@
 <section class="problem" style="background: var(--warm-white);">
   <div class="reveal" style="text-align:center; margin-bottom:40px;">
     <p class="section-label">Client Stories</p>
-    <h2 class="section-title">Real results,<br><em>real confidence.</em></h2>
+    <h2 class="section-title">Real results,<br>real confidence.</h2>
   </div>
   <div class="reveal" style="display:flex; flex-direction:column; gap:20px;">
     <div style="background:var(--cream); padding:32px 28px;">
-      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"Having Lea beside me in the consultation changed everything. I finally understood what was being proposed — and felt confident saying yes."</p>
+      <p style="font-family:'DM Sans',sans-serif; font-size:16px; font-style:normal; line-height:1.8; color:var(--text); margin-bottom:20px;">"Having Lea beside me in the consultation changed everything. I finally understood what was being proposed — and felt confident saying yes."</p>
       <p style="font-size:13px; font-weight:500; color:var(--brown);">Priya T. <span style="color:var(--text-light); font-weight:400;">· Singapore</span></p>
     </div>
     <div style="background:var(--cream); padding:32px 28px;">
-      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"I'd wanted this done for years but was scared to do it alone in Korea. Lea made the whole experience feel safe — and the result is so natural."</p>
+      <p style="font-family:'DM Sans',sans-serif; font-size:16px; font-style:normal; line-height:1.8; color:var(--text); margin-bottom:20px;">"I'd wanted this done for years but was scared to do it alone in Korea. Lea made the whole experience feel safe — and the result is so natural."</p>
       <p style="font-size:13px; font-weight:500; color:var(--brown);">Mei Lin C. <span style="color:var(--text-light); font-weight:400;">· Hong Kong</span></p>
     </div>
     <div style="background:var(--cream); padding:32px 28px;">
-      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"The clinic Lea recommended was exactly my aesthetic. I never would have found it on my own. Already planning my next trip."</p>
+      <p style="font-family:'DM Sans',sans-serif; font-size:16px; font-style:normal; line-height:1.8; color:var(--text); margin-bottom:20px;">"The clinic Lea recommended was exactly my aesthetic. I never would have found it on my own. Already planning my next trip."</p>
       <p style="font-size:13px; font-weight:500; color:var(--brown);">Aisha R. <span style="color:var(--text-light); font-weight:400;">· Singapore</span></p>
     </div>
   </div>
@@ -289,17 +289,17 @@
   <div class="what-inner">
     <div class="reveal">
       <p class="section-label">What I Do</p>
-      <h2 class="section-title">I translate your<br><em>vision</em> into results.</h2>
-      <p class="what-intro">Most concierge services just book appointments. I go further.</p>
+      <h2 class="section-title">Your vision,<br>translated into results.</h2>
+      <p class="what-intro">Most concierge services just book appointments. The Seoul Curator goes further.</p>
       <div class="what-steps">
-        <div class="what-step"><div class="step-n">01</div><div><div class="step-title">Find your style</div><div class="step-text">We look at references together and define your direction — natural, subtle, or transformative.</div></div></div>
-        <div class="what-step"><div class="step-n">02</div><div><div class="step-title">Match you with the right clinic</div><div class="step-text">I connect you with clinics known for that specific aesthetic — not just any clinic.</div></div></div>
-        <div class="what-step"><div class="step-n">03</div><div><div class="step-title">Communicate it precisely in Korean</div><div class="step-text">In the consultation room, I translate not just words — but your exact vision.</div></div></div>
-        <div class="what-step"><div class="step-n">04</div><div><div class="step-title">Support you through to recovery</div><div class="step-text">I stay with you through the procedure and check in as you heal.</div></div></div>
+        <div class="what-step"><div class="step-n">01</div><div><div class="step-title">Find your style</div><div class="step-text">References reviewed together. Your direction defined — natural, subtle, or transformative.</div></div></div>
+        <div class="what-step"><div class="step-n">02</div><div><div class="step-title">Match you with the right clinic</div><div class="step-text">Matched with clinics known for that specific aesthetic — not just any clinic.</div></div></div>
+        <div class="what-step"><div class="step-n">03</div><div><div class="step-title">Communicate it precisely in Korean</div><div class="step-text">In the consultation room, not just words — your exact vision, communicated precisely in Korean.</div></div></div>
+        <div class="what-step"><div class="step-n">04</div><div><div class="step-title">Support you through to recovery</div><div class="step-text">Full support through the procedure and beyond.</div></div></div>
       </div>
     </div>
     <div class="what-quote-wrap reveal">
-      <p class="what-quote">"I don't just translate words. I translate the face you've been imagining — into Korean, and into reality."</p>
+      <p class="what-quote">"Not just words — the face you've been imagining, communicated precisely into Korean, and into reality."</p>
       <div class="what-author">Lea · Founder, The Seoul Curator</div>
     </div>
   </div>
@@ -310,9 +310,9 @@
   <div class="who-inner">
     <div class="who-card reveal">
       <p class="section-label">Meet Your Curator</p>
-      <h2 class="section-title" style="margin-bottom: 24px;">I find the style<br>you want — and the<br><em>clinic that delivers it.</em></h2>
+      <h2 class="section-title" style="margin-bottom: 24px;">The style you want.<br>The clinic that delivers it.</h2>
       <p class="who-text">Seoul-based. Bilingual. Fully dedicated to you.</p>
-      <p class="who-text">I find the style that works for <em>your</em> face — and the clinic that makes it happen.</p>
+      <p class="who-text">Finding the style that works for your face — and the clinic that makes it happen.</p>
       <div class="who-tags">
         <span class="who-tag">Seoul resident</span>
         <span class="who-tag">Korean & English</span>
@@ -328,7 +328,7 @@
 <section class="packages" id="packages">
   <div class="reveal">
     <p class="section-label">Investment</p>
-    <h2 class="section-title">Choose your <em>experience</em></h2>
+    <h2 class="section-title">Choose your experience</h2>
   </div>
   <div class="pkg-list-wrap reveal">
     <div class="pkg-card">
@@ -386,15 +386,15 @@
 <section class="cta" id="contact">
   <div class="cta-inner reveal">
     <p class="section-label">Ready?</p>
-    <h2 class="cta-title">Let's find the face<br>you've been <em>imagining.</em></h2>
-    <p class="cta-text">Start with a free chat. Even if it's vague — that's what I'm here for.</p>
+    <h2 class="cta-title">Let's find the face<br>you've been imagining.</h2>
+    <p class="cta-text">Start with a free chat. Even if it's vague — that's what The Seoul Curator is here for.</p>
     <a href="https://wa.me/821012345678" class="btn-primary">Contact via WhatsApp</a>
     <p class="cta-note">Free · No obligation · English & Korean · Singapore & Hong Kong</p>
   </div>
 </section>
 
 <footer>
-  <div class="footer-logo">The Seoul <em>Curator</em></div>
+  <div class="footer-logo">The Seoul Curator</div>
   <div class="footer-text">© 2025 The Seoul Curator</div>
   <ul class="footer-links"><li><a href="#">Instagram</a></li><li><a href="#">WhatsApp</a></li></ul>
 </footer>
