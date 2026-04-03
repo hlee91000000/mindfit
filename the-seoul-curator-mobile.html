@@ -63,27 +63,27 @@
   .prob-item { padding: 28px 0; border-top: 1px solid var(--sand); display: flex; gap: 20px; }
   .prob-num { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--mocha); flex-shrink: 0; margin-top: 3px; font-weight: 500; }
   .prob-title { font-size: 16px; font-weight: 500; margin-bottom: 8px; color: var(--brown); }
-  .prob-text { font-size: 15px; color: var(--text-mid); line-height: 1.75; }
+  .prob-text { font-size: 16px; color: var(--text-mid); line-height: 1.8; }
 
   /* WHAT */
-  .what { background: var(--brown); }
+  .what { background: var(--sand); }
   .what .section-label { color: var(--mocha); }
-  .what .section-title { color: var(--cream); }
-  .what .section-title em { color: var(--mocha); }
-  .what-intro { font-size: 16px; line-height: 1.85; color: rgba(245,241,235,0.6); margin-bottom: 36px; }
+  .what .section-title { color: var(--brown); }
+  .what .section-title em { color: var(--terracotta); }
+  .what-intro { font-size: 17px; line-height: 1.85; color: var(--text-mid); margin-bottom: 36px; }
   .what-steps { display: flex; flex-direction: column; margin-bottom: 48px; }
-  .what-step { padding: 22px 0; border-top: 1px solid rgba(245,241,235,0.1); display: flex; gap: 20px; }
-  .step-n { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--mocha); flex-shrink: 0; margin-top: 3px; font-weight: 500; }
-  .step-title { font-size: 15px; color: var(--cream); margin-bottom: 6px; font-weight: 500; }
-  .step-text { font-size: 14px; color: rgba(245,241,235,0.55); line-height: 1.75; }
-  .what-quote-wrap { background: rgba(245,241,235,0.06); border: 1px solid rgba(245,241,235,0.12); padding: 40px 32px; }
-  .what-quote { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-style: italic; line-height: 1.6; color: var(--cream); margin-bottom: 24px; }
-  .what-author { font-size: 13px; color: var(--mocha); letter-spacing: 0.08em; font-weight: 500; }
+  .what-step { padding: 28px 0; border-top: 1.5px solid var(--mocha-dark); display: flex; gap: 20px; opacity: 0.9; }
+  .step-n { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--warm-white); background: var(--mocha-dark); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 500; }
+  .step-title { font-size: 17px; color: var(--brown); margin-bottom: 8px; font-weight: 500; }
+  .step-text { font-size: 16px; color: var(--text-mid); line-height: 1.8; padding-top: 2px; }
+  .what-quote-wrap { background: var(--warm-white); border: 1px solid var(--beige); padding: 40px 32px; }
+  .what-quote { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-style: italic; line-height: 1.6; color: var(--brown); margin-bottom: 24px; }
+  .what-author { font-size: 13px; color: var(--mocha-dark); letter-spacing: 0.08em; font-weight: 500; }
 
   /* WHO */
   .who { background: var(--cream); }
   .who-card { background: var(--sand); padding: 44px 32px; margin-bottom: 40px; }
-  .who-text { font-size: 16px; line-height: 1.85; color: var(--text-mid); margin-bottom: 16px; }
+  .who-text { font-size: 17px; line-height: 1.85; color: var(--text-mid); margin-bottom: 16px; }
   .who-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
   .who-tag { background: var(--warm-white); border: 1px solid rgba(140,123,107,0.25); padding: 6px 16px; font-size: 13px; color: var(--mocha-dark); font-weight: 500; }
 
@@ -105,7 +105,7 @@
   .pkg-divider { height: 1px; background: var(--sand); margin-bottom: 24px; }
   .pkg-card.featured .pkg-divider { background: rgba(245,241,235,0.12); }
   .pkg-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
-  .pkg-features li { font-size: 15px; color: var(--text-mid); padding-left: 20px; position: relative; line-height: 1.65; }
+  .pkg-features li { font-size: 16px; color: var(--text-mid); padding-left: 20px; position: relative; line-height: 1.75; }
   .pkg-card.featured .pkg-features li { color: rgba(245,241,235,0.65); }
   .pkg-features li::before { content: '—'; position: absolute; left: 0; color: var(--mocha); font-size: 12px; top: 4px; }
   .pkg-btn { display: block; text-align: center; padding: 15px; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; border: 1.5px solid var(--sand); color: var(--brown); transition: all 0.3s; font-weight: 500; }
@@ -122,7 +122,7 @@
   .cta .section-label { color: var(--mocha); }
   .cta-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(38px, 10vw, 62px); font-weight: 400; color: var(--cream); line-height: 1.08; margin-bottom: 20px; }
   .cta-title em { font-style: italic; color: rgba(245,241,235,0.75); }
-  .cta-text { font-size: 16px; color: rgba(245,241,235,0.6); margin-bottom: 40px; line-height: 1.85; }
+  .cta-text { font-size: 17px; color: rgba(245,241,235,0.6); margin-bottom: 40px; line-height: 1.85; }
   .cta .btn-primary { background: var(--cream); color: var(--brown); display: block; }
   .cta .btn-primary:hover { background: var(--sand); }
   .cta-note { font-size: 13px; color: rgba(245,241,235,0.4); margin-top: 20px; line-height: 1.9; }
@@ -201,15 +201,7 @@
       <a href="#packages" class="btn-secondary">See packages</a>
     </div>
   </div>
-  <div class="hero-stats-wrap" style="display:none;">
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="stat-num">1:1</div><div class="stat-label">Personal Service</div></div>
-      <div class="hero-stat"><div class="stat-num">100%</div><div class="stat-label">Bilingual</div></div>
-      <div class="hero-stat"><div class="stat-num">SG</div><div class="stat-label">& Hong Kong</div></div>
-      <div class="hero-stat"><div class="stat-num">Free</div><div class="stat-label">Initial Consult</div></div>
-    </div>
-  </div>
-</section>
+  </section>
 
 <!-- MARQUEE -->
 <div class="marquee-wrap">
@@ -269,29 +261,28 @@
 </section>
 
 
-<!-- PROBLEM -->
-<section class="problem">
-  <div class="problem-inner">
-    <div class="reveal">
-      <p class="section-label">The Problem</p>
-      <h2 class="section-title">You know you want<br><em>something.</em><br>You just can't<br>explain it yet.</h2>
+<!-- TESTIMONIALS -->
+<section class="problem" style="background: var(--warm-white);">
+  <div class="reveal" style="text-align:center; margin-bottom:40px;">
+    <p class="section-label">Client Stories</p>
+    <h2 class="section-title">Real results,<br><em>real confidence.</em></h2>
+  </div>
+  <div class="reveal" style="display:flex; flex-direction:column; gap:20px;">
+    <div style="background:var(--cream); padding:32px 28px;">
+      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"Having Lea beside me in the consultation changed everything. I finally understood what was being proposed — and felt confident saying yes."</p>
+      <p style="font-size:13px; font-weight:500; color:var(--brown);">Priya T. <span style="color:var(--text-light); font-weight:400;">· Singapore</span></p>
     </div>
-    <div class="prob-list reveal">
-      <div class="prob-item">
-        <div class="prob-num">01</div>
-        <div><div class="prob-title">Too many options</div><div class="prob-text">Hundreds of clinics in Gangnam alone. Without local knowledge, choosing feels like a gamble.</div></div>
-      </div>
-      <div class="prob-item">
-        <div class="prob-num">02</div>
-        <div><div class="prob-title">Lost in translation</div><div class="prob-text">Your surgeon needs to understand your exact vision — every subtle detail of the result you're after.</div></div>
-      </div>
-      <div class="prob-item">
-        <div class="prob-num">03</div>
-        <div><div class="prob-title">No one truly on your side</div><div class="prob-text">Reviews are unreliable. Clinics have their own interests. You need someone whose only goal is your result.</div></div>
-      </div>
+    <div style="background:var(--cream); padding:32px 28px;">
+      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"I'd wanted this done for years but was scared to do it alone in Korea. Lea made the whole experience feel safe — and the result is so natural."</p>
+      <p style="font-size:13px; font-weight:500; color:var(--brown);">Mei Lin C. <span style="color:var(--text-light); font-weight:400;">· Hong Kong</span></p>
+    </div>
+    <div style="background:var(--cream); padding:32px 28px;">
+      <p style="font-family:'Cormorant Garamond',serif; font-size:19px; font-style:italic; line-height:1.7; color:var(--brown); margin-bottom:20px;">"The clinic Lea recommended was exactly my aesthetic. I never would have found it on my own. Already planning my next trip."</p>
+      <p style="font-size:13px; font-weight:500; color:var(--brown);">Aisha R. <span style="color:var(--text-light); font-weight:400;">· Singapore</span></p>
     </div>
   </div>
 </section>
+
 
 <!-- WHAT -->
 <section class="what" id="services">
@@ -299,7 +290,7 @@
     <div class="reveal">
       <p class="section-label">What I Do</p>
       <h2 class="section-title">I translate your<br><em>vision</em> into results.</h2>
-      <p class="what-intro">Most concierge services just book appointments. I go further — helping you discover what you actually want, then making sure it happens exactly as imagined.</p>
+      <p class="what-intro">Most concierge services just book appointments. I go further.</p>
       <div class="what-steps">
         <div class="what-step"><div class="step-n">01</div><div><div class="step-title">Find your style</div><div class="step-text">We look at references together and define your direction — natural, subtle, or transformative.</div></div></div>
         <div class="what-step"><div class="step-n">02</div><div><div class="step-title">Match you with the right clinic</div><div class="step-text">I connect you with clinics known for that specific aesthetic — not just any clinic.</div></div></div>
@@ -319,9 +310,9 @@
   <div class="who-inner">
     <div class="who-card reveal">
       <p class="section-label">Meet Your Curator</p>
-      <h2 class="section-title" style="margin-bottom: 24px;">Seoul-based.<br>Bilingual.<br><em>Genuinely yours.</em></h2>
-      <p class="who-text">I'm Lea. I live in Seoul, fluent in Korean and English, and I care about natural aesthetics — the kind that makes you look like a better version of yourself, not someone else.</p>
-      <p class="who-text">I've sat in those consultation chairs. I know how overwhelming it feels, and how much it matters to get it right.</p>
+      <h2 class="section-title" style="margin-bottom: 24px;">I find the style<br>you want — and the<br><em>clinic that delivers it.</em></h2>
+      <p class="who-text">Seoul-based. Bilingual. Fully dedicated to you.</p>
+      <p class="who-text">I find the style that works for <em>your</em> face — and the clinic that makes it happen.</p>
       <div class="who-tags">
         <span class="who-tag">Seoul resident</span>
         <span class="who-tag">Korean & English</span>
@@ -396,7 +387,7 @@
   <div class="cta-inner reveal">
     <p class="section-label">Ready?</p>
     <h2 class="cta-title">Let's find the face<br>you've been <em>imagining.</em></h2>
-    <p class="cta-text">Start with a free chat. Tell me what you're thinking — even if it's vague. That's what I'm here for.</p>
+    <p class="cta-text">Start with a free chat. Even if it's vague — that's what I'm here for.</p>
     <a href="https://wa.me/821012345678" class="btn-primary">Contact via WhatsApp</a>
     <p class="cta-note">Free · No obligation · English & Korean · Singapore & Hong Kong</p>
   </div>
@@ -412,12 +403,7 @@
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40));
 
-  // Show hero stats on desktop
-  const statsWrap = document.querySelector('.hero-stats-wrap');
-  if (window.innerWidth >= 1024) statsWrap.style.display = 'block';
-  window.addEventListener('resize', () => {
-    statsWrap.style.display = window.innerWidth >= 1024 ? 'block' : 'none';
-  });
+  
 
   document.querySelectorAll('.faq-item').forEach(item => {
     item.querySelector('.faq-q').addEventListener('click', () => item.classList.toggle('open'));
