@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Seoul Curator</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2692388194481389');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2692388194481389&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <style>
   :root {
     --cream: #F5F1EB;
@@ -209,7 +226,7 @@
 
 <nav id="nav">
   <a href="#" class="logo">The Seoul Curator</a>
-  <a href="https://wa.me/821066019708" class="nav-btn">Contact via WhatsApp</a>
+  <a href="https://wa.me/821066019708" class="nav-btn" onclick="fbq('track', 'Contact', {content_name: 'nav_whatsapp'})">Contact via WhatsApp</a>
 </nav>
 
 <!-- HERO -->
@@ -219,7 +236,7 @@
     <h1 class="hero-title">Find the face<br>you've always<br>imagined.</h1>
     <p class="hero-sub">Not just a booking service. A <strong>style curator</strong> — helping you define exactly what you want, find the right clinic in Seoul, and make sure it's communicated perfectly in Korean.</p>
     <div class="hero-btns">
-      <a href="https://wa.me/821066019708" class="btn-primary">Start a Free Chat</a>
+      <a href="https://wa.me/821066019708" class="btn-primary" onclick="fbq('track', 'Contact', {content_name: 'hero_cta'})">Start a Free Chat</a>
       <a href="#packages" class="btn-secondary">See packages</a>
     </div>
   </div>
@@ -355,7 +372,7 @@
         <li>Clinic escort & precise translation</li>
         <li>Price negotiation on your behalf</li>
       </ul>
-      <a href="https://wa.me/821066019708" class="pkg-btn">Get Started</a>
+      <a href="https://wa.me/821066019708" class="pkg-btn" onclick="fbq('track', 'Contact', {content_name: 'pkg_essential'})">Get Started</a>
     </div>
     <div class="pkg-card">
       <div class="pkg-name">Signature</div>
@@ -370,7 +387,7 @@
         <li>Accommodation referrals</li>
         <li>30-day post-op follow-up</li>
       </ul>
-      <a href="https://wa.me/821066019708" class="pkg-btn">Get Started</a>
+      <a href="https://wa.me/821066019708" class="pkg-btn" onclick="fbq('track', 'Contact', {content_name: 'pkg_signature'})">Get Started</a>
     </div>
   </div>
 </section>
@@ -383,7 +400,7 @@
     <p class="section-label">Ready?</p>
     <h2 class="cta-title">Let's find the face<br>you've been imagining.</h2>
     <p class="cta-text">Start with a free chat. Even if it's vague — that's what The Seoul Curator is here for.</p>
-    <a href="https://wa.me/821066019708" class="btn-primary">Contact via WhatsApp</a>
+    <a href="https://wa.me/821066019708" class="btn-primary" onclick="fbq('track', 'Contact', {content_name: 'bottom_cta'})">Contact via WhatsApp</a>
     <p class="cta-note">Free · No obligation · English & Korean · Singapore & Hong Kong</p>
   </div>
 </section>
